@@ -85,6 +85,149 @@ const ActionButton = styled.div`
   }
 `;
 
+// 收藏弹窗相关样式
+const ModalOverlay = styled.div<{ isOpen: boolean }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+`;
+
+const ModalContainer = styled.div`
+  background-color: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  
+  /* 添加自定义滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #c1c1c1;
+  }
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eef2f7;
+`;
+
+const ModalTitle = styled.h2`
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2a2f45;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 20px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f5f5f5;
+    color: #333;
+  }
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: #999;
+  
+  i {
+    font-size: 60px;
+    margin-bottom: 20px;
+    color: #ddd;
+  }
+  
+  div {
+    font-size: 16px;
+  }
+`;
+
+const PrintButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #4a89dc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: auto;
+  margin-bottom: 20px;
+  
+  &:hover {
+    background-color: #3a6cad;
+  }
+  
+  i {
+    font-size: 18px;
+  }
+`;
+
+const CardFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+`;
+
+const CardActionButton = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 22px;
+  color: #666;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #4a89dc;
+  }
+`;
+
 // 主题选项
 interface SubjectTab {
   id: string;
@@ -351,6 +494,8 @@ const HomePage = () => {
   const [showLowAccuracyModal, setShowLowAccuracyModal] = useState(false);
   const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
   const [showGradeSelectorModal, setShowGradeSelectorModal] = useState(false);
+  // 添加收藏弹窗状态
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   
   // 从localStorage中获取保存的学段，默认为初中
   const [currentGrade, setCurrentGrade] = useState<string>(() => {
@@ -539,7 +684,7 @@ const HomePage = () => {
   // 处理收藏切换
   const handleFavoriteToggle = (id: string) => {
     // 查找当前公式，获取其标题和收藏状态
-    const formula = formulas.find(f => f.id === id);
+    const formula = ALL_FORMULAS.find(f => f.id === id);
     if (!formula) return;
     
     const newIsFavorite = !formula.isFavorite;
@@ -563,6 +708,11 @@ const HomePage = () => {
       showToastMessage(`已将「${formula.title}」添加到您的收藏中`, 'fas fa-star');
     } else {
       showToastMessage(`已将「${formula.title}」从收藏中移除`, 'far fa-star');
+      
+      // 如果当前在收藏弹窗中，且没有收藏的公式了，可以自动关闭弹窗
+      if (showFavoritesModal && ALL_FORMULAS.filter(f => f.isFavorite).length === 0) {
+        setShowFavoritesModal(false);
+      }
     }
   };
 
@@ -620,9 +770,18 @@ const HomePage = () => {
     navigate('/search');
   };
   
-  // 处理收藏页面导航
+  // 处理收藏页面导航 - 修改为显示弹窗
   const handleFavoritesClick = () => {
-    navigate('/favorites');
+    // 显示收藏弹窗，而不是导航到新页面
+    setShowFavoritesModal(true);
+  };
+  
+  // 处理在收藏弹窗中点击公式卡片
+  const handleFavoriteFormulaClick = (formula: Formula) => {
+    // 关闭弹窗
+    setShowFavoritesModal(false);
+    // 导航到公式详情页
+    handleFormulaClick(formula);
   };
   
   // 处理错题本导航
@@ -675,21 +834,15 @@ const HomePage = () => {
         />
       </PageHeader>
       
-      <TabBar 
-        tabs={availableSubjects}
-        activeTab={activeSubject}
-        onTabChange={handleTabChange}
-      />
-      
       <ActionBar>
         <ActionButton onClick={handleFavoritesClick}>
           <i className="fas fa-star"></i>
           <span>我的收藏</span>
         </ActionButton>
-        <ActionButton onClick={handleErrorBookClick}>
+        {/* <ActionButton onClick={handleErrorBookClick}>
           <i className="fas fa-book"></i>
           <span>错题本</span>
-        </ActionButton>
+        </ActionButton> */}
         <ActionButton onClick={handleRecordsClick}>
           <i className="fas fa-history"></i>
           <span>练习记录</span>
@@ -703,6 +856,12 @@ const HomePage = () => {
           <span>打印</span>
         </ActionButton>
       </ActionBar>
+
+      <TabBar 
+        tabs={availableSubjects}
+        activeTab={activeSubject}
+        onTabChange={handleTabChange}
+      />
       
       <FormulaGridContainer>
         <FormulaGrid>
@@ -755,7 +914,57 @@ const HomePage = () => {
         onClose={() => setShowGradeSelectorModal(false)}
       />
       
-      {/* 添加自定义Toast组件 */}
+      {/* 收藏公式弹窗 */}
+      <ModalOverlay isOpen={showFavoritesModal} onClick={() => setShowFavoritesModal(false)}>
+        <ModalContainer onClick={(e) => e.stopPropagation()}>
+          <ModalHeader>
+            <ModalTitle>我的收藏</ModalTitle>
+            <CloseButton onClick={() => setShowFavoritesModal(false)}>
+              <i className="fas fa-times"></i>
+            </CloseButton>
+          </ModalHeader>
+          
+          {/* 获取收藏的公式 */}
+          {(() => {
+            // 筛选出已收藏的公式
+            const favoriteFormulas = ALL_FORMULAS.filter(f => f.isFavorite);
+            
+            if (favoriteFormulas.length === 0) {
+              return (
+                <EmptyState>
+                  <i className="far fa-star"></i>
+                  <div>暂无收藏公式</div>
+                </EmptyState>
+              );
+            }
+            
+            return (
+              <>
+                <PrintButton onClick={handlePrintClick}>
+                  <i className="fas fa-print"></i> 打印收藏公式
+                </PrintButton>
+                
+                <FormulaGrid>
+                  {favoriteFormulas.map(formula => (
+                    <FormulaCard
+                      key={formula.id}
+                      title={formula.title}
+                      content={formula.content}
+                      accuracy={formula.accuracy}
+                      isFavorite={formula.isFavorite}
+                      onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
+                      onPracticeClick={() => handlePracticeClick(formula)}
+                      onClick={() => handleFavoriteFormulaClick(formula)}
+                    />
+                  ))}
+                </FormulaGrid>
+              </>
+            );
+          })()}
+        </ModalContainer>
+      </ModalOverlay>
+      
+      {/* Toast提示 */}
       <Toast visible={showToast}>
         <i className={toastIcon}></i>
         {toastMessage}

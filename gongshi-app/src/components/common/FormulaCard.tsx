@@ -28,10 +28,16 @@ const Card = styled.div`
   }
 `;
 
+const TitleContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+`;
+
 const Title = styled.div`
   font-size: 20px;
   color: #333;
-  margin-bottom: 15px;
   font-weight: 500;
 `;
 
@@ -49,10 +55,10 @@ const Content = styled.div`
 
 const CardFooter = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
   margin-top: 15px;
   padding-top: 10px;
-  border-top: 1px solid #f5f5f5;
+  // border-top: 1px solid #f5f5f5;
 `;
 
 const ActionButton = styled.button`
@@ -75,9 +81,11 @@ const ActionButton = styled.button`
   }
 `;
 
-const StarButton = styled(ActionButton)<{ active: boolean }>`
+const StarButton = styled(ActionButton) <{ active: boolean }>`
   color: ${props => props.active ? '#ff9500' : '#ccc'};
-  
+  margin-left: 10px;
+  flex: 1;
+  text-align: left;
   &:hover {
     color: #ff9500;
   }
@@ -127,18 +135,21 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
   return (
     <Card onClick={handleCardClick}>
       <AccuracyBadge accuracy={accuracy}>{accuracy}%</AccuracyBadge>
-      <Title>{title}</Title>
-      <Content>{content}</Content>
-      <CardFooter>
-        <StarButton 
+      
+      <TitleContainer>
+        <Title>{title}</Title>
+        <StarButton
           active={isFavorite}
           onClick={(e) => handleActionClick(e, onFavoriteToggle)}
         >
           <i className={isFavorite ? 'fas fa-star' : 'far fa-star'} />
         </StarButton>
-        
+      </TitleContainer>
+      
+      <Content>{content}</Content>
+      <CardFooter>
         <ActionButton onClick={(e) => handleActionClick(e, onPracticeClick)}>
-          <i className="fas fa-edit" />
+          <span style={{ color: '#4a89dc' }}>练一练</span>
         </ActionButton>
       </CardFooter>
     </Card>

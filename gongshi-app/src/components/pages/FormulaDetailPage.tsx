@@ -51,7 +51,7 @@ const FormulaCard = styled.div`
 const CardHeader = styled.div`
   background-color: #4a89dc;
   color: white;
-  padding: 24px 30px;
+  padding: 15px 30px;
   position: relative;
   display: flex;
   justify-content: space-between;
@@ -194,7 +194,6 @@ const RightColumn = styled.div`
 const FormulaSection = styled.div`
   padding-bottom: 30px;
   margin-bottom: 30px;
-  border-bottom: 1px solid #eef2f7;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -226,8 +225,8 @@ const FormulaDescription = styled.div`
 
 const FavoriteButton = styled.button`
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: -20px;
+  right: -20px;
   background: none;
   border: none;
   color: #4a89dc;
@@ -250,6 +249,7 @@ const FavoriteButton = styled.button`
 
 const RelatedSection = styled.div`
   margin-bottom: 30px;
+  border-top: 1px solid #eef2f7;
 `;
 
 const SectionTitle = styled.h3`
@@ -433,7 +433,7 @@ const Toast = styled.div<{ visible: boolean }>`
 // 更新右下角反馈按钮样式，适应FormulaSection内的位置
 const CornerFeedbackButton = styled.button`
   position: absolute;
-  bottom: 15px;
+  bottom: -20px;
   right: -25px;
   background: none;
   border: none;
@@ -722,7 +722,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个圆的半径为5厘米，求这个圆的周长。'
       },
       {
@@ -748,7 +748,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个圆的半径为6厘米，求这个圆的面积。'
       },
       {
@@ -772,7 +772,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个三角形的底边长为8厘米，高为6厘米，求面积。'
       },
       {
@@ -796,7 +796,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个直角三角形，两直角边分别为3厘米和4厘米，求斜边长。'
       },
       {
@@ -823,7 +823,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个平行四边形的底边长为8厘米，高为5厘米，求面积。'
       },
       {
@@ -850,7 +850,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个梯形的上底长4厘米，下底长10厘米，高为6厘米，求面积。'
       },
       {
@@ -874,7 +874,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '求解方程：x² - 5x + 6 = 0'
       },
       {
@@ -900,7 +900,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '已知三角形两边长分别为4cm和5cm，它们的夹角为60°，求第三边长。'
       },
       {
@@ -910,7 +910,7 @@ const ALL_FORMULAS = [
       }
     ]
   },
-  
+
   // 物理公式
   {
     id: '9',
@@ -928,7 +928,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一辆汽车在2小时内行驶了120千米，求汽车的平均速度。'
       },
       {
@@ -952,7 +952,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一块体积为50立方厘米的金属，质量为400克，求这块金属的密度。'
       },
       {
@@ -978,7 +978,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个质量为2千克的物体，受到10牛顿的力作用，求物体的加速度。'
       },
       {
@@ -1002,7 +1002,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个物体在水平面上被一个大小为20牛顿的力拉动，力的方向与水平方向成30°角，物体移动了5米，求力做的功。'
       },
       {
@@ -1026,7 +1026,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个电器在220伏电压下，电流为2安培，求电器的功率。'
       },
       {
@@ -1050,7 +1050,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个100匝的线圈中，磁通量在0.01秒内从2韦伯变为0，求线圈中的感应电动势。'
       },
       {
@@ -1074,7 +1074,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '一个质量为1千克的物体所蕴含的能量是多少？（光速c = 3×10⁸米/秒）'
       },
       {
@@ -1084,7 +1084,7 @@ const ALL_FORMULAS = [
       }
     ]
   },
-  
+
   // 化学公式
   {
     id: '16',
@@ -1100,7 +1100,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '在25℃时，纯水中氢离子浓度是多少？'
       },
       {
@@ -1124,7 +1124,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '将20mL 0.1mol/L的硫酸溶液与40mL 0.1mol/L的氢氧化钠溶液混合，溶液的pH如何变化？'
       },
       {
@@ -1148,7 +1148,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '计算氯化钠(NaCl)的摩尔质量。(Na=23, Cl=35.5)'
       },
       {
@@ -1172,7 +1172,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '在标准状况下(273.15K, 101.325kPa)，1mol理想气体的体积是多少？'
       },
       {
@@ -1196,7 +1196,7 @@ const ALL_FORMULAS = [
     examples: [
       {
         id: '1',
-        title: '例题1',
+        title: '例题',
         content: '对于反应N₂ + 3H₂ ⇌ 2NH₃，平衡时[N₂] = 0.1mol/L，[H₂] = 0.2mol/L，[NH₃] = 0.4mol/L，求平衡常数K。'
       },
       {
@@ -1232,7 +1232,7 @@ const FormulaDetailPage = () => {
   const [nextFormula, setNextFormula] = useState<any>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  
+
   // 修改反馈相关状态
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackTypes, setFeedbackTypes] = useState({
@@ -1242,52 +1242,52 @@ const FormulaDetailPage = () => {
     formatIssue: false
   });
   const [feedbackContent, setFeedbackContent] = useState('');
-  
+
   // 加载公式数据
   useEffect(() => {
     // 首先同步可能的收藏状态变化
     syncFormulasWithStorage();
-    
+
     if (id) {
       console.log("Looking for formula with ID:", id);
-      
+
       // 优化公式查找逻辑，更严格地比较ID
       const currentFormula = ALL_FORMULAS.find(f => {
         const formulaId = String(f.id);
         const paramId = String(id);
         return formulaId === paramId;
       });
-      
+
       if (currentFormula) {
         console.log("Found formula:", currentFormula.title);
         setFormula(currentFormula);
-        
+
         // 查找前一个和后一个公式（同一学科和学段内）
         const sameTypeFormulas = ALL_FORMULAS.filter(
           f => f.subject === currentFormula.subject && f.level === currentFormula.level
         );
-        
+
         console.log("Found same type formulas:", sameTypeFormulas.length, "for subject:", currentFormula.subject, "level:", currentFormula.level);
-        
+
         // 确保按照ID的数值顺序排序，先将ID转为数字
         const sortedFormulas = [...sameTypeFormulas].sort((a, b) => {
           const aNum = parseInt(String(a.id));
           const bNum = parseInt(String(b.id));
           return aNum - bNum;
         });
-        
+
         // 找到当前公式在排序后数组中的索引
         const currentIndex = sortedFormulas.findIndex(f => String(f.id) === String(id));
-        
+
         console.log("Current index:", currentIndex, "Current ID:", id, "Formula IDs:", sortedFormulas.map(f => f.id));
-        
+
         if (currentIndex > 0) {
           setPrevFormula(sortedFormulas[currentIndex - 1]);
           console.log("Setting prev formula:", sortedFormulas[currentIndex - 1].title);
         } else {
           setPrevFormula(null);
         }
-        
+
         if (currentIndex < sortedFormulas.length - 1) {
           setNextFormula(sortedFormulas[currentIndex + 1]);
           console.log("Setting next formula:", sortedFormulas[currentIndex + 1].title);
@@ -1301,48 +1301,48 @@ const FormulaDetailPage = () => {
       }
     }
   }, [id, navigate]);
-  
+
   // 处理返回按钮点击 - 根据导航状态决定返回路径
   const handleBackClick = () => {
     navigate('/');
   };
-  
+
   // 处理练习按钮点击
   const handlePracticeClick = () => {
     navigate(`/practice/${id}`);
   };
-  
+
   // 显示提示消息
   const showToastMessage = (message: string) => {
     setToastMessage(message);
     setShowToast(true);
-    
+
     // 3秒后自动隐藏
     setTimeout(() => {
       setShowToast(false);
     }, 3000);
   };
-  
+
   // 处理收藏按钮点击
   const handleFavoriteToggle = () => {
     if (!formula) return;
-    
+
     // 更新本地状态
     const newIsFavorite = !formula.isFavorite;
     setFormula({
       ...formula,
       isFavorite: newIsFavorite
     });
-    
+
     // 更新ALL_FORMULAS中的状态
     const index = ALL_FORMULAS.findIndex(f => f.id === formula.id);
     if (index !== -1) {
       ALL_FORMULAS[index].isFavorite = newIsFavorite;
     }
-    
+
     // 保存到localStorage以便在首页和详情页之间共享状态
     localStorage.setItem(`formula_favorite_${formula.id}`, String(newIsFavorite));
-    
+
     // 显示提示消息
     if (newIsFavorite) {
       showToastMessage(`已将「${formula.title}」添加到您的收藏中`);
@@ -1350,7 +1350,7 @@ const FormulaDetailPage = () => {
       showToastMessage(`已将「${formula.title}」从收藏中移除`);
     }
   };
-  
+
   // 处理上一个/下一个公式导航
   const handlePrevClick = () => {
     if (prevFormula) {
@@ -1359,7 +1359,7 @@ const FormulaDetailPage = () => {
       navigate(`/formula/${prevId}`);
     }
   };
-  
+
   const handleNextClick = () => {
     if (nextFormula) {
       const nextId = String(nextFormula.id);
@@ -1367,12 +1367,12 @@ const FormulaDetailPage = () => {
       navigate(`/formula/${nextId}`);
     }
   };
-  
+
   // 处理相关公式点击
   const handleRelatedItemClick = (relatedId: string) => {
     navigate(`/formula/${relatedId}`);
   };
-  
+
   // 处理复选框变更
   const handleCheckboxChange = (field: keyof typeof feedbackTypes) => {
     setFeedbackTypes(prev => ({
@@ -1380,17 +1380,17 @@ const FormulaDetailPage = () => {
       [field]: !prev[field]
     }));
   };
-  
+
   // 提交反馈
   const handleSubmitFeedback = () => {
     // 检查是否至少选择了一个反馈类型
     const hasSelectedType = Object.values(feedbackTypes).some(value => value);
-    
+
     if (!hasSelectedType && !feedbackContent.trim()) {
       showToastMessage('请至少选择一个反馈类型或填写反馈内容');
       return;
     }
-    
+
     // 在实际应用中，这里应该发送反馈数据到服务器
     console.log("提交反馈:", {
       formulaId: id,
@@ -1398,7 +1398,7 @@ const FormulaDetailPage = () => {
       feedbackTypes,
       content: feedbackContent
     });
-    
+
     // 重置表单并关闭模态框
     setFeedbackTypes({
       errorReport: false,
@@ -1408,21 +1408,21 @@ const FormulaDetailPage = () => {
     });
     setFeedbackContent('');
     setShowFeedbackModal(false);
-    
+
     // 显示提交成功提示
     showToastMessage('感谢您的反馈，我们会尽快处理！');
   };
-  
+
   // 处理反馈按钮点击
   const handleFeedbackClick = () => {
     setShowFeedbackModal(true);
   };
-  
+
   // 处理关闭弹窗按钮点击
   const handleCloseModal = () => {
     navigate('/');
   };
-  
+
   // 如果公式数据尚未加载，显示加载状态
   if (!formula) {
     return (
@@ -1434,37 +1434,37 @@ const FormulaDetailPage = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container>
       <BackButton onClick={handleBackClick}>
         <i className="fas fa-arrow-left"></i> 返回公式列表
       </BackButton>
-      
+
       {/* 将关闭按钮移至Container下，使其位于弹窗外部 */}
       <CloseDetailButton onClick={handleCloseModal}>
         <i className="fas fa-times"></i>
       </CloseDetailButton>
-      
+
       <FormulaCard>
         <CardHeader>
           {/* 上一个公式导航按钮 */}
-          <NavButtonHeader 
-            direction="prev" 
+          <NavButtonHeader
+            direction="prev"
             onClick={handlePrevClick}
             disabled={!prevFormula}
           >
             <i className="fas fa-chevron-left"></i>
             {prevFormula && <span>{prevFormula.title}</span>}
           </NavButtonHeader>
-          
+
           <TitleSection>
             <Title>{formula.title}</Title>
           </TitleSection>
-          
+
           {/* 下一个公式导航按钮 */}
-          <NavButtonHeader 
-            direction="next" 
+          <NavButtonHeader
+            direction="next"
             onClick={handleNextClick}
             disabled={!nextFormula}
           >
@@ -1472,7 +1472,7 @@ const FormulaDetailPage = () => {
             <i className="fas fa-chevron-right"></i>
           </NavButtonHeader>
         </CardHeader>
-        
+
         <ContentContainer>
           <LeftColumn>
             <FormulaSection>
@@ -1485,21 +1485,21 @@ const FormulaDetailPage = () => {
                   {formula.description}
                 </FormulaDescription>
               )}
-              
+
               {/* 将反馈按钮移到公式区域(FormulaSection)的右下角 */}
               <CornerFeedbackButton onClick={handleFeedbackClick}>
                 <i className="fas fa-comment-alt"></i> 反馈
               </CornerFeedbackButton>
             </FormulaSection>
-            
+
             {(formula.relatedLower.length > 0 || formula.relatedHigher.length > 0) && (
               <RelatedSection>
                 {formula.relatedLower.length > 0 && (
-                  <div style={{ marginBottom: '25px' }}>
+                  <div>
                     <SectionTitle>相关的基础公式</SectionTitle>
                     <RelatedList>
                       {formula.relatedLower.map((item: any) => (
-                        <RelatedItem 
+                        <RelatedItem
                           key={item.id}
                           onClick={() => handleRelatedItemClick(item.id)}
                         >
@@ -1509,13 +1509,13 @@ const FormulaDetailPage = () => {
                     </RelatedList>
                   </div>
                 )}
-                
+
                 {formula.relatedHigher.length > 0 && (
                   <div>
                     <SectionTitle>相关的进阶公式</SectionTitle>
                     <RelatedList>
                       {formula.relatedHigher.map((item: any) => (
-                        <RelatedItem 
+                        <RelatedItem
                           key={item.id}
                           onClick={() => handleRelatedItemClick(item.id)}
                         >
@@ -1528,11 +1528,11 @@ const FormulaDetailPage = () => {
               </RelatedSection>
             )}
           </LeftColumn>
-          
+
           <RightColumn>
             <ExampleSection>
-              <SectionTitle>例题与解析</SectionTitle>
-              
+              {/* <SectionTitle>例题与解析</SectionTitle> */}
+
               {formula.examples.map((example: any) => (
                 <ExampleItem key={example.id}>
                   <ExampleTitle>{example.title}</ExampleTitle>
@@ -1540,95 +1540,95 @@ const FormulaDetailPage = () => {
                 </ExampleItem>
               ))}
             </ExampleSection>
-            
+
             <PracticeButton onClick={handlePracticeClick}>
               <i className="fas fa-edit"></i> 练习此公式
             </PracticeButton>
           </RightColumn>
         </ContentContainer>
       </FormulaCard>
-      
+
       {/* 提示消息Toast组件 */}
       <Toast visible={showToast}>
         <i className={formula?.isFavorite ? "fas fa-star" : "fas fa-check-circle"}></i>
         {toastMessage}
       </Toast>
-      
+
       {/* 修改反馈模态框 */}
       <FeedbackModal visible={showFeedbackModal}>
         <ModalContent visible={showFeedbackModal}>
           <CloseModalButton onClick={() => setShowFeedbackModal(false)}>
             <i className="fas fa-times"></i>
           </CloseModalButton>
-          
+
           <ModalTitle>提供反馈</ModalTitle>
           <ModalSubtitle>您的意见将帮助我们改进产品体验</ModalSubtitle>
-          
+
           <FormGroup>
             <FormLabel>请选择您遇到的问题类型：</FormLabel>
-            
+
             <CheckboxContainer>
               <CheckboxGroup onClick={() => handleCheckboxChange('errorReport')}>
-                <HiddenCheckbox 
-                  type="checkbox" 
-                  id="errorReport" 
+                <HiddenCheckbox
+                  type="checkbox"
+                  id="errorReport"
                   checked={feedbackTypes.errorReport}
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
                 <StyledCheckbox checked={feedbackTypes.errorReport} />
                 <CheckboxLabel htmlFor="errorReport">公式错误</CheckboxLabel>
               </CheckboxGroup>
-              
+
               <CheckboxGroup onClick={() => handleCheckboxChange('difficultExplanation')}>
-                <HiddenCheckbox 
-                  type="checkbox" 
-                  id="difficultExplanation" 
+                <HiddenCheckbox
+                  type="checkbox"
+                  id="difficultExplanation"
                   checked={feedbackTypes.difficultExplanation}
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
                 <StyledCheckbox checked={feedbackTypes.difficultExplanation} />
                 <CheckboxLabel htmlFor="difficultExplanation">例题错误</CheckboxLabel>
               </CheckboxGroup>
-              
+
               <CheckboxGroup onClick={() => handleCheckboxChange('incompleteExplanation')}>
-                <HiddenCheckbox 
-                  type="checkbox" 
-                  id="incompleteExplanation" 
+                <HiddenCheckbox
+                  type="checkbox"
+                  id="incompleteExplanation"
                   checked={feedbackTypes.incompleteExplanation}
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
                 <StyledCheckbox checked={feedbackTypes.incompleteExplanation} />
                 <CheckboxLabel htmlFor="incompleteExplanation">解析错误</CheckboxLabel>
               </CheckboxGroup>
-              
+
               <CheckboxGroup onClick={() => handleCheckboxChange('formatIssue')}>
-                <HiddenCheckbox 
-                  type="checkbox" 
-                  id="formatIssue" 
+                <HiddenCheckbox
+                  type="checkbox"
+                  id="formatIssue"
                   checked={feedbackTypes.formatIssue}
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
                 <StyledCheckbox checked={feedbackTypes.formatIssue} />
                 <CheckboxLabel htmlFor="formatIssue">其他</CheckboxLabel>
               </CheckboxGroup>
             </CheckboxContainer>
           </FormGroup>
-          
+
           <FormGroup>
             <FormLabel>补充描述（可选）：</FormLabel>
-            <FormTextarea 
+            <FormTextarea
               placeholder="详细描述您遇到的问题，我们将认真处理每一条反馈..."
               value={feedbackContent}
               onChange={(e) => setFeedbackContent(e.target.value)}
             />
           </FormGroup>
-          
+
           <ModalButtons>
             <ModalButton onClick={() => setShowFeedbackModal(false)}>
               取消
             </ModalButton>
-            <ModalButton 
-              primary 
+            <ModalButton
+              primary
               onClick={handleSubmitFeedback}
             >
               提交反馈
