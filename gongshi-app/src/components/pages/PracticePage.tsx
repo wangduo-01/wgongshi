@@ -6,116 +6,76 @@ import { useParams, useNavigate } from 'react-router-dom';
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  max-width: 1280px;
   width: 100%;
-  margin: 0 auto;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
   background-color: #f5f6fa;
-  padding: 20px;
-  min-height: 100vh;
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  background-color: #4a89dc;
+  color: white;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
-  color: #4a89dc;
-  font-size: 16px;
+  color: white;
+  font-size: 20px;
   cursor: pointer;
-  padding: 10px 0;
-  margin-bottom: 20px;
-  font-weight: 500;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   
   &:hover {
-    color: #2e5ca8;
-  }
-  
-  i {
-    font-size: 18px;
+    background-color: rgba(255, 255, 255, 0.1);
   }
 `;
 
-const ProgressBar = styled.div`
-  width: 100%;
-  max-width: 800px;
-  height: 6px;
-  background-color: #e0e7f3;
-  border-radius: 6px;
-  margin: 0 auto 30px;
-  position: relative;
-  overflow: hidden;
-`;
-
-const ProgressFill = styled.div<{ progress: number }>`
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: ${props => props.progress}%;
-  background-color: #4a89dc;
-  border-radius: 6px;
-  transition: width 0.3s ease;
-`;
-
-const QuizCard = styled.div`
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-`;
-
-const QuizHeader = styled.div`
-  padding: 24px 30px;
-  background-color: #4a89dc;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const QuizTitle = styled.h1`
-  font-size: 20px;
+const HeaderTitle = styled.h1`
+  font-size: 18px;
   font-weight: 600;
   margin: 0;
+  text-align: center;
 `;
 
-const QuestionCounter = styled.div`
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
+const ContentContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow-y: auto;
 `;
 
 const QuestionContent = styled.div`
-  padding: 30px 30px 20px;
+  padding: 30px 20px;
   font-size: 18px;
   line-height: 1.6;
   color: #333;
-  position: relative;
-  
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 30px;
-    right: 30px;
-    height: 1px;
-    background-color: #f0f3f8;
-  }
+  background-color: white;
+  margin-bottom: 1px;
 `;
 
 const OptionsContainer = styled.div`
-  padding: 20px 30px 30px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  background-color: white;
+  flex: 1;
+  padding: 10px 20px 30px;
 `;
 
 interface OptionProps {
@@ -131,6 +91,7 @@ const OptionItem = styled.div<OptionProps>`
   transition: all 0.2s;
   display: flex;
   align-items: center;
+  margin-bottom: 15px;
   
   &:hover {
     border-color: ${props => props.isSelected ? '#4a89dc' : '#d5e0f2'};
@@ -161,13 +122,14 @@ const OptionText = styled.div`
   line-height: 1.4;
 `;
 
-const NavigationContainer = styled.div`
+const FooterContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 30px;
-  background-color: #fafbfd;
+  padding: 15px 20px;
+  background-color: white;
   border-top: 1px solid #eef2f7;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 `;
 
 const NavButton = styled.button<{ isPrimary?: boolean, disabled?: boolean }>`
@@ -215,6 +177,7 @@ const NavButton = styled.button<{ isPrimary?: boolean, disabled?: boolean }>`
 const ProgressText = styled.div`
   color: #7a8599;
   font-size: 14px;
+  font-weight: 500;
 `;
 
 // 模拟题目数据
@@ -279,7 +242,6 @@ const PracticePage = () => {
   
   const totalQuestions = SAMPLE_QUESTIONS.length;
   const question = SAMPLE_QUESTIONS[currentQuestion];
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   
   // 处理返回按钮点击 - 返回公式详情页
   const handleBackClick = () => {
@@ -291,23 +253,6 @@ const PracticePage = () => {
     const newAnswers = [...selectedAnswers];
     newAnswers[currentQuestion] = index;
     setSelectedAnswers(newAnswers);
-  };
-  
-  // 处理下一题
-  const handleNextQuestion = () => {
-    if (currentQuestion < totalQuestions - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      // 所有题目已完成，跳转到结果页
-      navigate(`/result/${id}`);
-    }
-  };
-  
-  // 处理上一题
-  const handlePrevQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
-    }
   };
   
   // 处理完成按钮点击
@@ -323,7 +268,24 @@ const PracticePage = () => {
     const score = Math.round((correctCount / totalQuestions) * 100);
     
     // 导航到结果页，并传递分数
-    navigate(`/result/${id}?score=${score}`);
+    navigate(`/practice-result/${id}?score=${score}`);
+  };
+  
+  // 处理下一题
+  const handleNextQuestion = () => {
+    if (currentQuestion < totalQuestions - 1) {
+      setCurrentQuestion(prev => prev + 1);
+    } else {
+      // 所有题目已完成，跳转到结果页
+      navigate(`/practice-result/${id}`);
+    }
+  };
+  
+  // 处理上一题
+  const handlePrevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+    }
   };
   
   const isLastQuestion = currentQuestion === totalQuestions - 1;
@@ -331,20 +293,14 @@ const PracticePage = () => {
   
   return (
     <Container>
-      <BackButton onClick={handleBackClick}>
-        <i className="fas fa-arrow-left"></i> {formulaTitle}
-      </BackButton>
+      <Header>
+        <BackButton onClick={handleBackClick}>
+          <i className="fas fa-arrow-left"></i>
+        </BackButton>
+        <HeaderTitle>{formulaTitle} - 练习</HeaderTitle>
+      </Header>
       
-      <ProgressBar>
-        <ProgressFill progress={progress} />
-      </ProgressBar>
-      
-      <QuizCard>
-        <QuizHeader>
-          <QuizTitle>{formulaTitle} - 练习</QuizTitle>
-          <QuestionCounter>第 {currentQuestion + 1} 题 / 共 {totalQuestions} 题</QuestionCounter>
-        </QuizHeader>
-        
+      <ContentContainer>
         <QuestionContent>
           {question.content}
         </QuestionContent>
@@ -368,36 +324,36 @@ const PracticePage = () => {
             );
           })}
         </OptionsContainer>
+      </ContentContainer>
+      
+      <FooterContainer>
+        <NavButton
+          onClick={handlePrevQuestion}
+          disabled={currentQuestion === 0}
+        >
+          <i className="fas fa-chevron-left"></i> 上一题
+        </NavButton>
         
-        <NavigationContainer>
-          <NavButton
-            onClick={handlePrevQuestion}
-            disabled={currentQuestion === 0}
+        <ProgressText>{currentQuestion + 1} / {totalQuestions}</ProgressText>
+        
+        {isLastQuestion ? (
+          <NavButton 
+            isPrimary 
+            onClick={handleFinish}
+            disabled={!hasSelectedCurrentAnswer}
           >
-            <i className="fas fa-chevron-left"></i> 上一题
+            完成 <i className="fas fa-check"></i>
           </NavButton>
-          
-          <ProgressText>{currentQuestion + 1} / {totalQuestions}</ProgressText>
-          
-          {isLastQuestion ? (
-            <NavButton 
-              isPrimary 
-              onClick={handleFinish}
-              disabled={!hasSelectedCurrentAnswer}
-            >
-              完成测试 <i className="fas fa-check"></i>
-            </NavButton>
-          ) : (
-            <NavButton 
-              isPrimary 
-              onClick={handleNextQuestion}
-              disabled={!hasSelectedCurrentAnswer}
-            >
-              下一题 <i className="fas fa-chevron-right"></i>
-            </NavButton>
-          )}
-        </NavigationContainer>
-      </QuizCard>
+        ) : (
+          <NavButton 
+            isPrimary 
+            onClick={handleNextQuestion}
+            disabled={!hasSelectedCurrentAnswer}
+          >
+            下一题 <i className="fas fa-chevron-right"></i>
+          </NavButton>
+        )}
+      </FooterContainer>
     </Container>
   );
 };

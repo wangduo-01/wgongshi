@@ -14,17 +14,18 @@ interface FormulaCardProps {
 const Card = styled.div`
   background-color: white;
   border-radius: 12px;
-  padding: 25px 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 10px 15px;
+  box-shadow: 0 0 35px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  height: 180px;
   
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.09);
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.09);
   }
 `;
 
@@ -32,7 +33,13 @@ const TitleContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 5px;
+`;
+
+const TitleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 
 const Title = styled.div`
@@ -51,14 +58,45 @@ const Content = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+`;
+
+const MultiLineContent = styled.div`
+  font-size: 26px;
+  color: #000;
+  text-align: center;
+  padding: 0;
+  font-family: 'Times New Roman', Times, serif;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  max-width: 100%;
+  margin: 0 auto;
+  
+  & > div {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    max-height: 90px;
+    text-align: center;
+  }
 `;
 
 const CardFooter = styled.div`
   display: flex;
   justify-content: end;
-  margin-top: 15px;
-  padding-top: 10px;
-  // border-top: 1px solid #f5f5f5;
+  align-items: center;
+  margin-top: 0;
+  padding-top: 0;
+  height: 30px;
 `;
 
 const ActionButton = styled.button`
@@ -67,7 +105,7 @@ const ActionButton = styled.button`
   cursor: pointer;
   color: #999;
   font-size: 24px;
-  padding: 5px 10px;
+  padding: 3px 10px;
   transition: all 0.2s;
   border-radius: 8px;
   
@@ -83,11 +121,26 @@ const ActionButton = styled.button`
 
 const StarButton = styled(ActionButton) <{ active: boolean }>`
   color: ${props => props.active ? '#ff9500' : '#ccc'};
-  margin-left: 10px;
-  flex: 1;
-  text-align: left;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  
   &:hover {
     color: #ff9500;
+    background-color: #f9f9f9;
+  }
+  
+  i {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 `;
 
@@ -96,13 +149,10 @@ interface AccuracyBadgeProps {
 }
 
 const AccuracyBadge = styled.div<AccuracyBadgeProps>`
-  position: absolute;
-  top: 12px;
-  right: 12px;
   color: white;
   font-size: 14px;
-  padding: 4px 12px;
-  border-radius: 20px;
+  padding: 3px 10px;
+  border-radius: 12px;
   font-weight: 500;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   background-color: ${props => {
@@ -134,10 +184,13 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
 
   return (
     <Card onClick={handleCardClick}>
-      <AccuracyBadge accuracy={accuracy}>{accuracy}%</AccuracyBadge>
-      
       <TitleContainer>
-        <Title>{title}</Title>
+        <TitleGroup>
+          <Title>{title}</Title>
+          {accuracy > 0 && (
+            <AccuracyBadge accuracy={accuracy}>{accuracy}%</AccuracyBadge>
+          )}
+        </TitleGroup>
         <StarButton
           active={isFavorite}
           onClick={(e) => handleActionClick(e, onFavoriteToggle)}
@@ -146,10 +199,13 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
         </StarButton>
       </TitleContainer>
       
-      <Content>{content}</Content>
+      <MultiLineContent title={content}>
+        <div>{content}</div>
+      </MultiLineContent>
+      
       <CardFooter>
         <ActionButton onClick={(e) => handleActionClick(e, onPracticeClick)}>
-          <span style={{ color: '#4a89dc' }}>练一练</span>
+          <span style={{ color: '#4a89dc', fontSize: '16px' }}>练一练</span>
         </ActionButton>
       </CardFooter>
     </Card>

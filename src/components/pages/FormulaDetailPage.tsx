@@ -14,7 +14,7 @@ const DetailContainer = styled.div`
   background-color: ${props => props.theme.colors.white};
   border-radius: ${props => props.theme.borderRadius.large};
   box-shadow: ${props => props.theme.shadows.medium};
-  padding: 15px;
+  padding: 20px;
   min-height: 800px;
   height: calc(100vh - 40px);
   overflow: hidden;
@@ -38,8 +38,8 @@ const DetailContent = styled.div`
 `;
 
 const FormulaDetail = styled.div`
-  flex: 1;
-  padding: 15px;
+  flex: 2;
+  padding: 20px;
   border-right: 1px solid ${props => props.theme.colors.border};
   display: flex;
   flex-direction: column;
@@ -52,8 +52,8 @@ const FormulaDetail = styled.div`
 `;
 
 const ExampleDetail = styled.div`
-  flex: 1;
-  padding: 15px;
+  flex: 3;
+  padding: 20px;
   overflow-y: auto;
   
   /* 自定义滚动条样式 */
@@ -93,27 +93,33 @@ const NavButton = styled.div`
 `;
 
 const FormulaTitle = styled.div`
-  font-size: 16px;
+  font-size: 18px;
   color: ${props => props.theme.colors.text.primary};
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  font-weight: 600;
 `;
 
 const FormulaContent = styled.div`
-  font-size: 24px;
+  font-size: 32px;
   color: ${props => props.theme.colors.text.primary};
   text-align: center;
   margin: 30px 0;
   font-weight: 500;
+  padding: 30px;
+  background-color: ${props => props.theme.colors.secondary};
+  border-radius: ${props => props.theme.borderRadius.medium};
+  box-shadow: ${props => props.theme.shadows.small};
 `;
 
 const RelatedFormulas = styled.div`
-  margin-top: 15px;
+  margin-top: 20px;
 `;
 
 const RelatedTitle = styled.div`
   font-size: 14px;
   color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  font-weight: 500;
 `;
 
 const RelatedList = styled.div`
@@ -125,10 +131,11 @@ const RelatedList = styled.div`
 const RelatedItem = styled.div`
   background-color: ${props => props.theme.colors.card};
   border-radius: 5px;
-  padding: 5px 10px;
-  font-size: 12px;
+  padding: 6px 12px;
+  font-size: 13px;
   color: ${props => props.theme.colors.text.primary};
   cursor: pointer;
+  border: 1px solid ${props => props.theme.colors.border};
   
   &:hover {
     background-color: ${props => props.theme.colors.secondary};
@@ -136,26 +143,34 @@ const RelatedItem = styled.div`
 `;
 
 const ExampleItem = styled.div`
-  margin-bottom: 15px;
-  padding-bottom: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
   border-bottom: 1px solid ${props => props.theme.colors.border};
 `;
 
 const ExampleTitle = styled.div`
-  font-size: 14px;
-  color: ${props => props.theme.colors.text.secondary};
-  margin-bottom: 5px;
+  font-size: 16px;
+  color: ${props => props.theme.colors.text.primary};
+  margin-bottom: 10px;
+  font-weight: 500;
 `;
 
 const ExampleContent = styled.div`
-  font-size: 14px;
+  font-size: 15px;
   color: ${props => props.theme.colors.text.primary};
-  line-height: 1.5;
+  line-height: 1.6;
 `;
 
 const RightActionButton = styled.div`
   cursor: pointer;
   color: ${props => props.color || props.theme.colors.text.secondary};
+`;
+
+const ActionButtonsContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 20px;
 `;
 
 // 模拟公式数据
@@ -296,6 +311,15 @@ const FormulaDetailPage: React.FC = () => {
           <FormulaTitle>{formula.title}</FormulaTitle>
           <FormulaContent>{formula.content}</FormulaContent>
           
+          <ActionButtonsContainer>
+            <Button 
+              icon={faPencilAlt}
+              onClick={handlePracticeClick}
+            >
+              练一练
+            </Button>
+          </ActionButtonsContainer>
+          
           {formula.lowerFormulas && formula.lowerFormulas.length > 0 && (
             <RelatedFormulas>
               <RelatedTitle>低阶公式</RelatedTitle>
@@ -334,13 +358,6 @@ const FormulaDetailPage: React.FC = () => {
               </ExampleContent>
             </ExampleItem>
           ))}
-          
-          <Button 
-            icon={faPencilAlt}
-            onClick={handlePracticeClick}
-          >
-            练一练
-          </Button>
         </ExampleDetail>
       </DetailContent>
     </DetailContainer>

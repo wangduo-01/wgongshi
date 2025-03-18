@@ -15,7 +15,7 @@ const HomeContainer = styled.div`
   background-color: ${props => props.theme.colors.white};
   border-radius: ${props => props.theme.borderRadius.large};
   box-shadow: ${props => props.theme.shadows.medium};
-  padding: 15px;
+  padding: 20px;
   min-height: 800px;
   height: calc(100vh - 40px);
   overflow: hidden;
@@ -26,10 +26,41 @@ const HomeContainer = styled.div`
   }
 `;
 
+const ContentSection = styled.div`
+  display: flex;
+  flex: 1;
+  margin-top: 15px;
+  height: calc(100% - 100px);
+  
+  ${props => props.theme.mediaQueries.tablet} {
+    flex-direction: column;
+    height: auto;
+  }
+`;
+
+const TabsContainer = styled.div`
+  width: 180px;
+  padding-right: 15px;
+  border-right: 1px solid ${props => props.theme.colors.border};
+  
+  ${props => props.theme.mediaQueries.tablet} {
+    width: 100%;
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid ${props => props.theme.colors.border};
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+`;
+
 const FormulaGridContainer = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding-right: 5px;
+  padding-left: 20px;
+  
+  ${props => props.theme.mediaQueries.tablet} {
+    padding-left: 0;
+  }
   
   /* 自定义滚动条样式 */
   &::-webkit-scrollbar {
@@ -49,17 +80,49 @@ const FormulaGridContainer = styled.div`
 
 const FormulaGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
   
   ${props => props.theme.mediaQueries.tablet} {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
   
   ${props => props.theme.mediaQueries.mobile} {
     grid-template-columns: 1fr;
   }
+`;
+
+const VerticalTabs = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
+
+const TabItem = styled.div<{ active: boolean }>`
+  padding: 12px 15px;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: ${props => props.theme.borderRadius.small};
+  background-color: ${props => props.active ? props.theme.colors.secondary : 'transparent'};
+  color: ${props => props.active ? props.theme.colors.primary : props.theme.colors.text.primary};
+  font-weight: ${props => props.active ? 500 : 400};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: ${props => !props.active && props.theme.colors.background};
+  }
+  
+  ${props => props.theme.mediaQueries.tablet} {
+    padding: 10px;
+    font-size: 14px;
+  }
+`;
+
+const CategoryTitle = styled.h2`
+  font-size: 18px;
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0 0 20px 0;
+  font-weight: 500;
 `;
 
 // 主题选项
@@ -176,69 +239,61 @@ const HomePage: React.FC = () => {
         showRightActions
       />
       
-      <TabBar 
-        tabs={SUBJECTS}
-        activeTab={activeSubject}
-        onTabChange={handleTabChange}
-      />
+      <ContentSection>
+        <TabsContainer>
+          <CategoryTitle>学科</CategoryTitle>
+          <VerticalTabs>
+            {SUBJECTS.map(subject => (
+              <TabItem 
+                key={subject.id}
+                active={activeSubject === subject.id}
+                onClick={() => handleTabChange(subject.id)}
+              >
+                {subject.label}
+              </TabItem>
+            ))}
+          </VerticalTabs>
+        </TabsContainer>
+        
+        <FormulaGridContainer>
+          <FormulaGrid>
+            {formulas.map(formula => (
+              <FormulaCard
+                key={formula.id}
+                title={formula.title}
+                content={formula.content}
+                accuracy={formula.accuracy}
+                isFavorite={formula.isFavorite}
+                onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
+                onPracticeClick={() => handlePracticeClick(formula)}
+                onClick={() => handleFormulaClick(formula)}
+              />
+            ))}
+          </FormulaGrid>
+        </FormulaGridContainer>
+      </ContentSection>
       
-      <FormulaGridContainer>
-        <FormulaGrid>
-          {formulas.map(formula => (
-            <FormulaCard
-              key={formula.id}
-              title={formula.title}
-              content={formula.content}
-              accuracy={formula.accuracy}
-              isFavorite={formula.isFavorite}
-              onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
-              onPracticeClick={() => handlePracticeClick(formula)}
-              onClick={() => handleFormulaClick(formula)}
-            />
-          ))}
-        </FormulaGrid>
-      </FormulaGridContainer>
-      
-      {/* 低准确率提醒弹窗 */}
+      {/* 准确率低提醒弹窗 */}
       <Modal
         isOpen={showLowAccuracyModal}
+        title="准确率较低"
         onClose={() => setShowLowAccuracyModal(false)}
-        title="需要巩固的公式"
+        onConfirm={() => {
+          setShowLowAccuracyModal(false);
+          if (selectedFormula) {
+            navigate(`/practice/${selectedFormula.id}`);
+          }
+        }}
+        confirmText="继续练习"
+        cancelText="查看详情"
+        onCancel={() => {
+          setShowLowAccuracyModal(false);
+          if (selectedFormula) {
+            navigate(`/formula/${selectedFormula.id}`);
+          }
+        }}
       >
-        <div>
-          <p>发现您对"{selectedFormula?.title}"的掌握度较低（{selectedFormula?.accuracy}%），建议进行针对性练习以提高掌握度。</p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px' }}>
-            <button
-              style={{
-                padding: '8px 20px',
-                borderRadius: '5px',
-                backgroundColor: 'white',
-                color: '#4a89dc',
-                border: '1px solid #4a89dc',
-                cursor: 'pointer',
-              }}
-              onClick={() => setShowLowAccuracyModal(false)}
-            >
-              稍后再说
-            </button>
-            <button
-              style={{
-                padding: '8px 20px',
-                borderRadius: '5px',
-                backgroundColor: '#4a89dc',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                setShowLowAccuracyModal(false);
-                navigate(`/practice/${selectedFormula?.id}`);
-              }}
-            >
-              立即练习
-            </button>
-          </div>
-        </div>
+        <p>您对"{selectedFormula?.title}"的掌握程度较低(准确率{selectedFormula?.accuracy}%)，建议先查看详情后再练习。</p>
       </Modal>
     </HomeContainer>
   );

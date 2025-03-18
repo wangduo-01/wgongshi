@@ -11,25 +11,59 @@ const Container = styled.div`
   margin: 0 auto;
   background-color: ${props => props.theme.colors.white};
   min-height: 100vh;
-  padding: 20px 30px;
+  padding: 0;
 `;
 
 const PageHeader = styled.div`
-  background-color: #4a89dc;
-  color: white;
-  padding: 15px 0;
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
-  margin: -20px -30px 20px -30px;
+  padding: 15px 0;
+  background-color: #4a89dc;
+  border-bottom: 1px solid #eee;
 `;
 
-const HeaderText = styled.div`
+const HeaderText = styled.h2`
+  font-size: 22px;
+  color: white;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: white;
   font-size: 18px;
-  font-weight: 500;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  &:active {
+    transform: translateY(-50%) scale(0.95);
+  }
 `;
 
 const Content = styled.div`
   flex: 1;
+  padding: 20px 30px 40px; /* 增加底部内边距，避免与底部重叠 */
+  overflow-y: auto;
 `;
 
 const Title = styled.div`
@@ -302,14 +336,11 @@ const RecordPage = () => {
   return (
     <Container>
       <PageHeader>
+        <BackButton onClick={handleBack}>
+          <i className="fas fa-chevron-left"></i>
+        </BackButton>
         <HeaderText>练习记录</HeaderText>
       </PageHeader>
-      
-      <Header 
-        title="练习记录"
-        showBackButton
-        onBack={handleBack}
-      />
       
       <Content>
         <Title>我的练习统计</Title>

@@ -19,10 +19,10 @@ interface FormulaCardProps {
 const CardContainer = styled.div`
   background-color: ${props => props.theme.colors.white};
   border-radius: ${props => props.theme.borderRadius.medium};
-  padding: 12px;
+  padding: 16px;
   position: relative;
   border: 1px solid ${props => props.theme.colors.border};
-  height: 120px;
+  height: 150px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -31,7 +31,7 @@ const CardContainer = styled.div`
   cursor: pointer;
   
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: ${props => props.theme.shadows.medium};
   }
 `;
@@ -48,8 +48,8 @@ const getAccuracyLevel = (accuracy: number): 'high' | 'medium' | 'low' => {
 
 const AccuracyBadge = styled.div<AccuracyBadgeProps>`
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 10px;
+  right: 10px;
   background-color: ${props => {
     switch (props.level) {
       case 'high': return props.theme.colors.accuracy.high;
@@ -59,23 +59,34 @@ const AccuracyBadge = styled.div<AccuracyBadgeProps>`
     }
   }};
   color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
+  border-radius: 12px;
+  padding: 3px 8px;
   font-size: 12px;
+  font-weight: 500;
 `;
 
 const FormulaTitle = styled.div`
-  font-size: 14px;
+  font-size: 15px;
   color: ${props => props.theme.colors.text.primary};
   margin-bottom: 5px;
+  font-weight: 500;
+  padding-right: 50px; /* 为准确率徽章留出空间 */
 `;
 
 const FormulaContent = styled.div`
-  font-size: 16px;
+  font-size: 22px;
   color: ${props => props.theme.colors.text.primary};
   text-align: center;
-  margin: 10px 0;
+  margin: 15px 0;
   font-weight: 500;
+  padding: 12px 8px;
+  background-color: ${props => props.theme.colors.secondary};
+  border-radius: ${props => props.theme.borderRadius.small};
+  box-shadow: ${props => props.theme.shadows.small} inset;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const CardActions = styled.div`
@@ -88,9 +99,12 @@ const IconButton = styled.div`
   color: ${props => props.theme.colors.text.secondary};
   cursor: pointer;
   transition: color 0.2s ease;
+  padding: 5px;
+  border-radius: 50%;
   
   &:hover {
     color: ${props => props.theme.colors.primary};
+    background-color: ${props => props.theme.colors.secondary};
   }
 `;
 

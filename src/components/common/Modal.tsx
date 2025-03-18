@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 import styled from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -8,10 +8,15 @@ interface ModalProps {
   isOpen: boolean;
   title?: string;
   onClose: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
   width?: string;
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  confirmText?: string;
+  cancelText?: string;
+  showActions?: boolean;
 }
 
 // 样式化组件
@@ -43,7 +48,7 @@ interface ModalContentProps {
 const ModalContent = styled.div<ModalContentProps>`
   background-color: white;
   border-radius: ${props => props.theme.borderRadius.large};
-  padding: 20px;
+  padding: 25px;
   width: ${props => props.width || '90%'};
   max-width: 400px;
   max-height: 90vh;
@@ -59,7 +64,7 @@ const ModalContent = styled.div<ModalContentProps>`
   
   ${props => props.theme.mediaQueries.mobile} {
     width: 95%;
-    padding: 15px;
+    padding: 20px;
   }
 `;
 
@@ -67,12 +72,12 @@ const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 `;
 
 const ModalTitle = styled.div`
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 600;
   color: ${props => props.theme.colors.text.primary};
 `;
 
@@ -90,6 +95,38 @@ const CloseButton = styled.button`
   }
 `;
 
+const ModalBody = styled.div`
+  margin-bottom: 20px;
+`;
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+`;
+
+interface ButtonProps {
+  primary?: boolean;
+}
+
+const Button = styled.button<ButtonProps>`
+  padding: 10px 20px;
+  border-radius: ${props => props.theme.borderRadius.small};
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  background-color: ${props => props.primary ? props.theme.colors.primary : 'white'};
+  color: ${props => props.primary ? 'white' : props.theme.colors.primary};
+  border: 1px solid ${props => props.primary ? 'transparent' : props.theme.colors.primary};
+  
+  &:hover {
+    background-color: ${props => props.primary ? '#3a79cc' : props.theme.colors.secondary};
+  }
+`;
+
 /**
  * Modal组件 - 可重用的弹窗组件
  * 
@@ -98,6 +135,7 @@ const CloseButton = styled.button`
  * - 支持标题和关闭按钮
  * - 支持点击遮罩层关闭
  * - 支持自定义宽度
+ * - 支持确认和取消操作
  * - 添加动画效果
  */
 const Modal: React.FC<ModalProps> = ({
@@ -108,6 +146,11 @@ const Modal: React.FC<ModalProps> = ({
   width,
   showCloseButton = true,
   closeOnOverlayClick = true,
+  onConfirm,
+  onCancel,
+  confirmText = "确认",
+  cancelText = "取消",
+  showActions = false,
 }) => {
   // 当Modal打开时禁止背景滚动
   useEffect(() => {
@@ -133,6 +176,9 @@ const Modal: React.FC<ModalProps> = ({
   // 如果未打开，不渲染任何内容
   if (!isOpen) return null;
   
+  // 确定是否显示操作按钮
+  const shouldShowActions = showActions || onConfirm || onCancel;
+  
   return (
     <ModalOverlay className={isOpen ? 'open' : ''} onClick={handleOverlayClick}>
       <ModalContent width={width}>
@@ -146,7 +192,25 @@ const Modal: React.FC<ModalProps> = ({
             )}
           </ModalHeader>
         )}
-        {children}
+        
+        <ModalBody>
+          {children}
+        </ModalBody>
+        
+        {shouldShowActions && (
+          <ModalFooter>
+            {onCancel && (
+              <Button onClick={onCancel}>
+                {cancelText}
+              </Button>
+            )}
+            {onConfirm && (
+              <Button primary onClick={onConfirm}>
+                {confirmText}
+              </Button>
+            )}
+          </ModalFooter>
+        )}
       </ModalContent>
     </ModalOverlay>
   );

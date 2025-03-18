@@ -2,6 +2,23 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
+// 添加Formula接口定义
+interface Formula {
+  id: string;
+  title: string;
+  content: string;
+  description?: string;
+  accuracy: number;
+  isFavorite: boolean;
+  subject: string; // 'math', 'physics', 'chemistry'
+  level: string; // '小学', '初中', '高中'
+  relatedLower: Array<{ id: string, title: string }>;
+  relatedHigher: Array<{ id: string, title: string }>;
+  examples: Array<{ id: string, title: string, content: string }>;
+  lastPracticed?: Date; // 添加最近练习时间属性，用于排序
+  favoriteTimestamp?: number; // 添加收藏时间戳
+}
+
 // 样式部分
 const Container = styled.div`
   position: fixed;
@@ -16,6 +33,15 @@ const Container = styled.div`
   z-index: 1000;
   padding: 20px;
   backdrop-filter: blur(2px);
+  opacity: 1;
+  visibility: visible;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.closing {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    background-color: rgba(0, 0, 0, 0);
+  }
 `;
 
 const BackButton = styled.button`
@@ -34,16 +60,25 @@ const FormulaCard = styled.div`
   display: flex;
   flex-direction: column;
   position: relative;
-  animation: modalAppear 0.3s ease;
+  animation: modalAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  .closing & {
+    transform: translateY(20px) scale(0.97);
+    opacity: 0;
+  }
   
   @keyframes modalAppear {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(20px) scale(0.97);
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
 `;
@@ -51,7 +86,7 @@ const FormulaCard = styled.div`
 const CardHeader = styled.div`
   background-color: #4a89dc;
   color: white;
-  padding: 15px 30px;
+  padding: 10px 30px;
   position: relative;
   display: flex;
   justify-content: space-between;
@@ -62,11 +97,17 @@ const TitleSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1;
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
 `;
 
 const Title = styled.h1`
-  font-size: 28px;
+  font-size: 25px;
   font-weight: 600;
   margin: 0;
   text-align: center;
@@ -91,6 +132,7 @@ const NavButtonHeader = styled.button<{ direction: 'prev' | 'next' }>`
   padding: 8px;
   border-radius: 8px;
   transition: all 0.2s;
+  z-index: 2; /* 确保导航按钮位于标题之上 */
   
   &:hover {
     opacity: 1;
@@ -160,14 +202,17 @@ const LeftColumn = styled.div`
 
 const RightColumn = styled.div`
   flex: 1;
-  padding: 30px;
+  padding: 15px;
+  padding-bottom: 10px; /* 减小底部padding，由ButtonContainer来占据空间 */
   background-color: #fafbfd;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  position: relative; /* 为固定定位的按钮提供定位上下文 */
   
   @media (max-width: 768px) {
     padding: 25px 20px;
+    padding-bottom: 20px; /* 减小底部padding，由ButtonContainer来占据空间 */
     max-height: 50%;
   }
   
@@ -223,13 +268,14 @@ const FormulaDescription = styled.div`
   margin: 0 auto;
 `;
 
-const FavoriteButton = styled.button`
+// 修改FavoriteButton组件，添加isFavorite属性来控制颜色
+const FavoriteButton = styled.button<{ isFavorite?: boolean }>`
   position: absolute;
   top: -20px;
   right: -20px;
   background: none;
   border: none;
-  color: #4a89dc;
+  color: ${props => props.isFavorite ? '#ff9500' : '#ccc'};
   font-size: 24px;
   cursor: pointer;
   opacity: 0.9;
@@ -243,20 +289,29 @@ const FavoriteButton = styled.button`
   
   &:hover {
     opacity: 1;
-    background-color: rgba(74, 137, 220, 0.1);
+    background-color: ${props => props.isFavorite ? 'rgba(255, 149, 0, 0.1)' : 'rgba(204, 204, 204, 0.1)'};
   }
 `;
 
 const RelatedSection = styled.div`
-  margin-bottom: 30px;
+  margin-bottom: 0px;
   border-top: 1px solid #eef2f7;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 150px;
+  padding-top: 20px; /* 增加分割线与内容的间距 */
 `;
 
-const SectionTitle = styled.h3`
+const RelatedCategory = styled.div`
+  margin-bottom: 30px;
+`;
+
+const SectionTitle = styled.h2`
   font-size: 18px;
   font-weight: 600;
   color: #3a4255;
-  margin: 0 0 20px 0;
+  margin: 0 0 10px 0; /* 将bottom margin改为10px */
   position: relative;
   padding-left: 15px;
   
@@ -276,7 +331,8 @@ const SectionTitle = styled.h3`
 const RelatedList = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 15px;
+  margin-top: 15px;
 `;
 
 const RelatedItem = styled.button`
@@ -302,8 +358,8 @@ const ExampleSection = styled.div`
 `;
 
 const ExampleItem = styled.div`
-  margin-bottom: 30px;
-  padding-bottom: 20px;
+  margin-bottom: 10px;
+  padding-bottom: 0px;
   border-bottom: 1px solid #eef2f7;
   
   &:last-child {
@@ -317,7 +373,7 @@ const ExampleTitle = styled.h4`
   font-size: 18px;
   font-weight: 600;
   color: #4a89dc;
-  margin: 0 0 16px 0;
+  margin: 0 0 10px 0;
 `;
 
 const ExampleContent = styled.div`
@@ -331,11 +387,30 @@ const ExampleContent = styled.div`
   border: 1px solid #eef2f7;
 `;
 
+// 添加一个固定在底部的容器
+const ButtonContainer = styled.div`
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+  z-index: 10;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    padding: 0;
+  }
+`;
+
 const PracticeButton = styled.button`
   background-color: #4a89dc;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
   padding: 16px 25px;
   font-size: 16px;
   font-weight: 600;
@@ -344,15 +419,19 @@ const PracticeButton = styled.button`
   align-items: center;
   justify-content: center;
   width: 100%;
+  max-width: 350px;
   gap: 10px;
   transition: all 0.3s;
-  margin-top: auto;
   box-shadow: 0 4px 10px rgba(74, 137, 220, 0.25);
   
   &:hover {
     background-color: #3a6cad;
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(74, 137, 220, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
   
   i {
@@ -408,21 +487,26 @@ const NavFormula = styled.span`
 
 const Toast = styled.div<{ visible: boolean }>`
   position: fixed;
-  top: 20px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 16px;
-  opacity: ${props => props.visible ? '1' : '0'};
-  visibility: ${props => props.visible ? 'visible' : 'hidden'};
-  transition: all 0.3s ease;
-  z-index: 1000;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  z-index: 1500;
+  opacity: ${props => props.visible ? '1' : '0'};
+  transition: opacity 0.3s ease-in-out;
+  visibility: ${props => props.visible ? 'visible' : 'hidden'};
+  pointer-events: none;
+  max-width: 80%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   
   i {
     font-size: 18px;
@@ -703,8 +787,36 @@ const CloseDetailButton = styled.button`
   }
 `;
 
+// 在RelatedSection组件之前添加返回按钮样式定义
+const ReturnButton = styled.button`
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #4a89dc;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+  
+  &:hover {
+    background-color: #edf2fd;
+    box-shadow: 0 2px 8px rgba(74, 137, 220, 0.1);
+  }
+  
+  i {
+    font-size: 14px;
+  }
+`;
+
 // 模拟所有公式数据 - 与HomePage保持一致的格式
-const ALL_FORMULAS = [
+const ALL_FORMULAS: Formula[] = [
   // 数学公式
   {
     id: '1',
@@ -713,6 +825,7 @@ const ALL_FORMULAS = [
     description: '圆的周长等于2倍的圆周率乘以半径',
     accuracy: 90,
     isFavorite: false,
+    favoriteTimestamp: undefined, // 添加收藏时间戳
     subject: 'math',
     level: '小学',
     relatedLower: [],
@@ -768,7 +881,9 @@ const ALL_FORMULAS = [
     subject: 'math',
     level: '小学',
     relatedLower: [],
-    relatedHigher: [],
+    relatedHigher: [
+      { id: '4', title: '勾股定理' }
+    ],
     examples: [
       {
         id: '1',
@@ -791,18 +906,22 @@ const ALL_FORMULAS = [
     isFavorite: false,
     subject: 'math',
     level: '初中',
-    relatedLower: [],
-    relatedHigher: [],
+    relatedLower: [
+      { id: '3', title: '三角形面积' }
+    ],
+    relatedHigher: [
+      { id: '8', title: '余弦定理' }
+    ],
     examples: [
       {
         id: '1',
         title: '例题',
-        content: '一个直角三角形，两直角边分别为3厘米和4厘米，求斜边长。'
+        content: '一座观光塔高30米，在平地上距离塔底40米处有一棵树，树高5米。\n\n(1) 求塔顶到树顶的直线距离；\n\n(2) 一个人站在塔顶，从他的视角看向树顶和树底，这两条视线形成的夹角是多少？\n\n(3) 如果从塔顶沿着倾角为30°的方向架设一条直线缆车到地面，求缆车的长度和缆车终点到塔底的距离。\n\n(4) 在塔顶安装一个摄像头，要求能够监控以塔底为圆心、半径为100米的圆形区域，摄像头的视野角度至少需要是多少？'
       },
       {
         id: '2',
         title: '解析',
-        content: '根据勾股定理 a² + b² = c²\n代入数据：a = 3厘米，b = 4厘米\nc² = 3² + 4² = 9 + 16 = 25\nc = 5(厘米)'
+        content: '这个问题涉及勾股定理的多种实际应用，我们一步步来分析：\n\n【问题(1)】求塔顶到树顶的直线距离\n\n我们可以在平面直角坐标系中分析这个问题。假设塔底在原点(0,0)，则：\n- 塔顶位置：(0,30)\n- 树底位置：(40,0)\n- 树顶位置：(40,5)\n\n塔顶到树顶的直线距离可以用三维空间中两点间距离公式（勾股定理的扩展形式）计算：\nd = √[(40-0)² + (5-30)²] = √[1600 + 625] = √2225 = 47.17米\n\n我们也可以这样分析：塔顶到树顶形成一个直角三角形，其中：\n- 水平距离为40米\n- 高度差为|30-5| = 25米\n- 应用勾股定理：d² = 40² + 25² = 1600 + 625 = 2225\n- d = √2225 ≈ 47.17米\n\n【问题(2)】塔顶视角看向树顶和树底形成的夹角\n\n从塔顶(0,30)看向树底(40,0)和树顶(40,5)形成的角度，可以通过三角函数计算：\n\n首先计算塔顶到树底的距离：\nd₁ = √(40² + 30²) = √(1600 + 900) = √2500 = 50米\n\n塔顶到树顶的距离已经计算得出：d₂ = 47.17米\n\n设塔顶到树底的连线与水平线的夹角为α：\ntanα = 30/40 = 0.75\nα = arctan(0.75) ≈ 36.87°\n\n设塔顶到树顶的连线与水平线的夹角为β：\ntanβ = 25/40 = 0.625\nβ = arctan(0.625) ≈ 32.01°\n\n因此，塔顶观察树顶和树底的视线夹角为：\nθ = α - β = 36.87° - 32.01° = 4.86°\n\n【问题(3)】倾角30°的缆车长度和终点距离\n\n如果缆车从塔顶以30°角下降到地面，设缆车长度为L，终点到塔底的距离为x。\n\n根据三角函数关系：\nsin30° = 30/L\nL = 30/sin30° = 30/0.5 = 60米\n\ncos30° = x/L\nx = L·cos30° = 60·0.866 = 51.96米\n\n因此，缆车长度为60米，缆车终点距离塔底约51.96米。\n\n【问题(4)】摄像头视野角度要求\n\n设摄像头需要的视野角为2θ。\n\n摄像头安装在塔顶(0,30)，需要监控的区域是以塔底为圆心、半径为100米的圆形区域。\n\n通过三角函数关系，我们可以求出θ：\ntanθ = 100/30 = 10/3 ≈ 3.33\nθ = arctan(10/3) ≈ 73.3°\n\n因此，摄像头的视野角度至少需要：2θ ≈ 146.6°\n\n这个例题展示了勾股定理在实际问题中的多种应用。在几何学、测量学、建筑设计和工程学中，勾股定理是最基础也是最重要的定理之一。它不仅可以直接应用于计算距离，还可以与三角函数结合，解决更复杂的问题。'
       }
     ]
   },
@@ -1217,21 +1336,31 @@ const syncFormulasWithStorage = () => {
   ALL_FORMULAS.forEach(formula => {
     const storedValue = localStorage.getItem(`formula_favorite_${formula.id}`);
     if (storedValue !== null) {
-      formula.isFavorite = storedValue === 'true';
+      try {
+        // 尝试解析JSON格式
+        const favoriteData = JSON.parse(storedValue);
+        formula.isFavorite = favoriteData.isFavorite;
+        formula.favoriteTimestamp = favoriteData.timestamp || undefined;
+      } catch (e) {
+        // 兼容旧版本格式
+        formula.isFavorite = storedValue === 'true';
+      }
     }
   });
 };
 
 // 公式详情页组件
-const FormulaDetailPage = () => {
+const FormulaDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [formula, setFormula] = useState<any>(null);
-  const [prevFormula, setPrevFormula] = useState<any>(null);
-  const [nextFormula, setNextFormula] = useState<any>(null);
+  const [formula, setFormula] = useState<Formula | null>(null);
+  const [prevFormula, setPrevFormula] = useState<Formula | null>(null);
+  const [nextFormula, setNextFormula] = useState<Formula | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  // 添加返回上一个公式功能所需的状态
+  const [previousFormula, setPreviousFormula] = useState<any>(null);
 
   // 修改反馈相关状态
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -1262,37 +1391,67 @@ const FormulaDetailPage = () => {
         console.log("Found formula:", currentFormula.title);
         setFormula(currentFormula);
 
-        // 查找前一个和后一个公式（同一学科和学段内）
-        const sameTypeFormulas = ALL_FORMULAS.filter(
-          f => f.subject === currentFormula.subject && f.level === currentFormula.level
-        );
-
-        console.log("Found same type formulas:", sameTypeFormulas.length, "for subject:", currentFormula.subject, "level:", currentFormula.level);
-
-        // 确保按照ID的数值顺序排序，先将ID转为数字
-        const sortedFormulas = [...sameTypeFormulas].sort((a, b) => {
-          const aNum = parseInt(String(a.id));
-          const bNum = parseInt(String(b.id));
-          return aNum - bNum;
-        });
-
-        // 找到当前公式在排序后数组中的索引
-        const currentIndex = sortedFormulas.findIndex(f => String(f.id) === String(id));
-
-        console.log("Current index:", currentIndex, "Current ID:", id, "Formula IDs:", sortedFormulas.map(f => f.id));
-
-        if (currentIndex > 0) {
-          setPrevFormula(sortedFormulas[currentIndex - 1]);
-          console.log("Setting prev formula:", sortedFormulas[currentIndex - 1].title);
+        // 检查是否是从收藏弹窗进入
+        const fromFavorites = sessionStorage.getItem('fromFavoritesModal') === 'true';
+        
+        if (fromFavorites) {
+          // 使用收藏的公式列表进行导航
+          const favoriteFormulas = ALL_FORMULAS.filter(f => f.isFavorite);
+          
+          // 确保按照ID的数值顺序排序
+          const sortedFavoriteFormulas = [...favoriteFormulas].sort((a, b) => {
+            const aNum = parseInt(String(a.id));
+            const bNum = parseInt(String(b.id));
+            return aNum - bNum;
+          });
+          
+          // 找到当前公式在收藏列表中的索引
+          const currentIndex = sortedFavoriteFormulas.findIndex(f => String(f.id) === String(id));
+          
+          console.log("Current index in favorites:", currentIndex);
+          
+          if (currentIndex > 0) {
+            setPrevFormula(sortedFavoriteFormulas[currentIndex - 1]);
+          } else {
+            setPrevFormula(null);
+          }
+          
+          if (currentIndex < sortedFavoriteFormulas.length - 1) {
+            setNextFormula(sortedFavoriteFormulas[currentIndex + 1]);
+          } else {
+            setNextFormula(null);
+          }
         } else {
-          setPrevFormula(null);
-        }
+          // 使用同一学科和学段内的公式进行导航（原有逻辑）
+          const sameTypeFormulas = ALL_FORMULAS.filter(
+            f => f.subject === currentFormula.subject && f.level === currentFormula.level
+          );
 
-        if (currentIndex < sortedFormulas.length - 1) {
-          setNextFormula(sortedFormulas[currentIndex + 1]);
-          console.log("Setting next formula:", sortedFormulas[currentIndex + 1].title);
-        } else {
-          setNextFormula(null);
+          console.log("Found same type formulas:", sameTypeFormulas.length);
+
+          // 确保按照ID的数值顺序排序
+          const sortedFormulas = [...sameTypeFormulas].sort((a, b) => {
+            const aNum = parseInt(String(a.id));
+            const bNum = parseInt(String(b.id));
+            return aNum - bNum;
+          });
+
+          // 找到当前公式在排序后数组中的索引
+          const currentIndex = sortedFormulas.findIndex(f => String(f.id) === String(id));
+
+          console.log("Current index:", currentIndex);
+
+          if (currentIndex > 0) {
+            setPrevFormula(sortedFormulas[currentIndex - 1]);
+          } else {
+            setPrevFormula(null);
+          }
+
+          if (currentIndex < sortedFormulas.length - 1) {
+            setNextFormula(sortedFormulas[currentIndex + 1]);
+          } else {
+            setNextFormula(null);
+          }
         }
       } else {
         // 公式不存在，可以重定向回首页
@@ -1329,19 +1488,29 @@ const FormulaDetailPage = () => {
 
     // 更新本地状态
     const newIsFavorite = !formula.isFavorite;
+    const timestamp = newIsFavorite ? new Date().getTime() : undefined; // 获取当前时间戳
+    
     setFormula({
       ...formula,
-      isFavorite: newIsFavorite
+      isFavorite: newIsFavorite,
+      favoriteTimestamp: timestamp
     });
 
     // 更新ALL_FORMULAS中的状态
     const index = ALL_FORMULAS.findIndex(f => f.id === formula.id);
     if (index !== -1) {
       ALL_FORMULAS[index].isFavorite = newIsFavorite;
+      ALL_FORMULAS[index].favoriteTimestamp = timestamp;
     }
 
     // 保存到localStorage以便在首页和详情页之间共享状态
-    localStorage.setItem(`formula_favorite_${formula.id}`, String(newIsFavorite));
+    localStorage.setItem(
+      `formula_favorite_${formula.id}`, 
+      JSON.stringify({ 
+        isFavorite: newIsFavorite, 
+        timestamp: timestamp 
+      })
+    );
 
     // 显示提示消息
     if (newIsFavorite) {
@@ -1355,7 +1524,7 @@ const FormulaDetailPage = () => {
   const handlePrevClick = () => {
     if (prevFormula) {
       const prevId = String(prevFormula.id);
-      console.log("Navigating to prev formula:", prevId);
+      // 保留fromFavoritesModal状态，确保导航逻辑一致性
       navigate(`/formula/${prevId}`);
     }
   };
@@ -1363,13 +1532,17 @@ const FormulaDetailPage = () => {
   const handleNextClick = () => {
     if (nextFormula) {
       const nextId = String(nextFormula.id);
-      console.log("Navigating to next formula:", nextId);
+      // 保留fromFavoritesModal状态，确保导航逻辑一致性
       navigate(`/formula/${nextId}`);
     }
   };
 
-  // 处理相关公式点击
+  // 处理相关公式点击，修改为保存当前公式以便返回
   const handleRelatedItemClick = (relatedId: string) => {
+    // 保存当前公式到历史记录，以便返回
+    if (formula) {
+      setPreviousFormula(formula);
+    }
     navigate(`/formula/${relatedId}`);
   };
 
@@ -1420,7 +1593,43 @@ const FormulaDetailPage = () => {
 
   // 处理关闭弹窗按钮点击
   const handleCloseModal = () => {
-    navigate('/');
+    // 为关闭动画添加过渡效果
+    const container = document.querySelector('.formula-detail-container');
+    if (container) {
+      container.classList.add('closing');
+      
+      // 等待动画完成后再导航
+      setTimeout(() => {
+        // 检查是否是从收藏弹窗进入的
+        const fromFavorites = sessionStorage.getItem('fromFavoritesModal') === 'true';
+        
+        if (fromFavorites) {
+          // 直接设置一个标记，表示详情页已关闭且需要打开收藏弹窗
+          sessionStorage.setItem('openFavoritesModalDirectly', 'true');
+        }
+        
+        // 保持fromFavoritesModal标记不变，只用于导航逻辑
+        navigate('/', { replace: true }); // 使用replace模式避免在历史记录中添加多余的条目
+      }, 300); // 延长动画时间，提供更平滑的体验
+    } else {
+      // 检查是否是从收藏弹窗进入的
+      const fromFavorites = sessionStorage.getItem('fromFavoritesModal') === 'true';
+      
+      if (fromFavorites) {
+        sessionStorage.setItem('openFavoritesModalDirectly', 'true');
+      }
+      
+      navigate('/', { replace: true });
+    }
+  };
+
+  // 添加返回上一个公式的处理函数
+  const handleReturnToPreviousFormula = () => {
+    if (previousFormula) {
+      navigate(`/formula/${previousFormula.id}`);
+      // 清除历史记录，防止循环导航
+      setPreviousFormula(null);
+    }
   };
 
   // 如果公式数据尚未加载，显示加载状态
@@ -1436,7 +1645,7 @@ const FormulaDetailPage = () => {
   }
 
   return (
-    <Container>
+    <Container className="formula-detail-container">
       <BackButton onClick={handleBackClick}>
         <i className="fas fa-arrow-left"></i> 返回公式列表
       </BackButton>
@@ -1448,37 +1657,52 @@ const FormulaDetailPage = () => {
 
       <FormulaCard>
         <CardHeader>
-          {/* 上一个公式导航按钮 */}
-          <NavButtonHeader
-            direction="prev"
-            onClick={handlePrevClick}
-            disabled={!prevFormula}
-          >
-            <i className="fas fa-chevron-left"></i>
-            {prevFormula && <span>{prevFormula.title}</span>}
-          </NavButtonHeader>
+          {/* 根据是否有前一个公式决定是否显示按钮 */}
+          {prevFormula ? (
+            <NavButtonHeader
+              direction="prev"
+              onClick={handlePrevClick}
+            >
+              <i className="fas fa-chevron-left"></i>
+              <span>{prevFormula.title}</span>
+            </NavButtonHeader>
+          ) : (
+            <div></div> /* 占位元素，保持布局 */
+          )}
 
           <TitleSection>
             <Title>{formula.title}</Title>
           </TitleSection>
 
-          {/* 下一个公式导航按钮 */}
-          <NavButtonHeader
-            direction="next"
-            onClick={handleNextClick}
-            disabled={!nextFormula}
-          >
-            <span>{nextFormula && nextFormula.title}</span>
-            <i className="fas fa-chevron-right"></i>
-          </NavButtonHeader>
+          {/* 根据是否有下一个公式决定是否显示按钮 */}
+          {nextFormula ? (
+            <NavButtonHeader
+              direction="next"
+              onClick={handleNextClick}
+            >
+              <span>{nextFormula.title}</span>
+              <i className="fas fa-chevron-right"></i>
+            </NavButtonHeader>
+          ) : (
+            <div></div> /* 占位元素，保持布局 */
+          )}
         </CardHeader>
 
         <ContentContainer>
           <LeftColumn>
             <FormulaSection>
-              <FavoriteButton onClick={handleFavoriteToggle}>
+              <FavoriteButton onClick={handleFavoriteToggle} isFavorite={formula.isFavorite}>
                 <i className={formula.isFavorite ? 'fas fa-star' : 'far fa-star'} />
               </FavoriteButton>
+              
+              {/* 添加返回按钮，仅当有历史记录时显示 */}
+              {previousFormula && (
+                <ReturnButton onClick={handleReturnToPreviousFormula}>
+                  <i className="fas fa-arrow-left"></i>
+                  返回「{previousFormula.title}」
+                </ReturnButton>
+              )}
+              
               <Formula>{formula.content}</Formula>
               {formula.description && (
                 <FormulaDescription>
@@ -1495,8 +1719,8 @@ const FormulaDetailPage = () => {
             {(formula.relatedLower.length > 0 || formula.relatedHigher.length > 0) && (
               <RelatedSection>
                 {formula.relatedLower.length > 0 && (
-                  <div>
-                    <SectionTitle>相关的基础公式</SectionTitle>
+                  <RelatedCategory>
+                    <SectionTitle>基础公式</SectionTitle>
                     <RelatedList>
                       {formula.relatedLower.map((item: any) => (
                         <RelatedItem
@@ -1507,12 +1731,12 @@ const FormulaDetailPage = () => {
                         </RelatedItem>
                       ))}
                     </RelatedList>
-                  </div>
+                  </RelatedCategory>
                 )}
 
                 {formula.relatedHigher.length > 0 && (
-                  <div>
-                    <SectionTitle>相关的进阶公式</SectionTitle>
+                  <RelatedCategory>
+                    <SectionTitle>进阶公式</SectionTitle>
                     <RelatedList>
                       {formula.relatedHigher.map((item: any) => (
                         <RelatedItem
@@ -1523,7 +1747,7 @@ const FormulaDetailPage = () => {
                         </RelatedItem>
                       ))}
                     </RelatedList>
-                  </div>
+                  </RelatedCategory>
                 )}
               </RelatedSection>
             )}
@@ -1540,10 +1764,12 @@ const FormulaDetailPage = () => {
                 </ExampleItem>
               ))}
             </ExampleSection>
-
-            <PracticeButton onClick={handlePracticeClick}>
-              <i className="fas fa-edit"></i> 练习此公式
-            </PracticeButton>
+            
+            <ButtonContainer>
+              <PracticeButton onClick={handlePracticeClick}>
+                <i className="fas fa-edit"></i> 练习此公式
+              </PracticeButton>
+            </ButtonContainer>
           </RightColumn>
         </ContentContainer>
       </FormulaCard>

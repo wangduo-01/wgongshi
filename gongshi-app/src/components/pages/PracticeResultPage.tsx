@@ -1,49 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import Header from '../common/Header';
 
+// 样式部分
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  max-width: 1280px;
   width: 100%;
-  margin: 0 auto;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
   background-color: #f5f6fa;
-  padding: 20px;
-  min-height: 100vh;
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  background-color: #4a89dc;
+  color: white;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 `;
 
 const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
-  color: #4a89dc;
-  font-size: 16px;
+  color: white;
+  font-size: 20px;
   cursor: pointer;
-  padding: 10px 0;
-  margin-bottom: 20px;
-  font-weight: 500;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   
   &:hover {
-    color: #2e5ca8;
+    background-color: rgba(255, 255, 255, 0.1);
   }
-  
-  i {
-    font-size: 18px;
-  }
+`;
+
+const HeaderTitle = styled.h1`
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+`;
+
+const ContentContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+  align-items: center;
 `;
 
 const ResultCard = styled.div`
   width: 100%;
   max-width: 800px;
-  margin: 0 auto;
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  margin-bottom: 20px;
 `;
 
 const ResultHeader = styled.div`
@@ -53,7 +79,7 @@ const ResultHeader = styled.div`
   text-align: center;
 `;
 
-const ResultTitle = styled.h1`
+const ResultTitle = styled.h2`
   font-size: 22px;
   font-weight: 600;
   margin: 0 0 5px 0;
@@ -279,11 +305,6 @@ const PracticeResultPage = () => {
     navigate(`/practice/${id}`);
   };
   
-  // 处理查看解析（如果有）
-  const handleViewAnalysis = () => {
-    navigate(`/analysis/${id}`);
-  };
-  
   // 显示一些庆祝效果（高分时）
   const renderConfetti = () => {
     if (score >= 80) {
@@ -300,58 +321,58 @@ const PracticeResultPage = () => {
     <Container>
       {renderConfetti()}
       
-      <BackButton onClick={handleBackToFormula}>
-        <i className="fas fa-arrow-left"></i> {formulaTitle}
-      </BackButton>
+      <Header>
+        <BackButton onClick={handleBackToFormula}>
+          <i className="fas fa-arrow-left"></i>
+        </BackButton>
+        <HeaderTitle>{formulaTitle} - 练习结果</HeaderTitle>
+      </Header>
       
-      <ResultCard>
-        <ResultHeader>
-          <ResultTitle>练习结果</ResultTitle>
-          <div>看看你对{formulaTitle}的掌握程度</div>
-        </ResultHeader>
-        
-        <ScoreSection>
-          <ScoreCircle score={score}>
-            <ScoreValue>{score}</ScoreValue>
-            <ScoreLabel>分数</ScoreLabel>
-          </ScoreCircle>
+      <ContentContainer>
+        <ResultCard>
+          <ScoreSection>
+            <ScoreCircle score={score}>
+              <ScoreValue>{score}</ScoreValue>
+              <ScoreLabel>分数</ScoreLabel>
+            </ScoreCircle>
+            
+            <ResultMessage score={score}>
+              {getResultMessage()}
+            </ResultMessage>
+            
+            <ResultDescription>
+              {getResultDescription()}
+            </ResultDescription>
+          </ScoreSection>
           
-          <ResultMessage score={score}>
-            {getResultMessage()}
-          </ResultMessage>
+          <StatsSection>
+            <StatCard>
+              <StatValue>{totalQuestions}</StatValue>
+              <StatLabel>总题数</StatLabel>
+            </StatCard>
+            
+            <StatCard>
+              <StatValue>{correctAnswers}</StatValue>
+              <StatLabel>正确</StatLabel>
+            </StatCard>
+            
+            <StatCard>
+              <StatValue>{wrongAnswers}</StatValue>
+              <StatLabel>错误</StatLabel>
+            </StatCard>
+          </StatsSection>
           
-          <ResultDescription>
-            {getResultDescription()}
-          </ResultDescription>
-        </ScoreSection>
-        
-        <StatsSection>
-          <StatCard>
-            <StatValue>{totalQuestions}</StatValue>
-            <StatLabel>总题数</StatLabel>
-          </StatCard>
-          
-          <StatCard>
-            <StatValue>{correctAnswers}</StatValue>
-            <StatLabel>正确</StatLabel>
-          </StatCard>
-          
-          <StatCard>
-            <StatValue>{wrongAnswers}</StatValue>
-            <StatLabel>错误</StatLabel>
-          </StatCard>
-        </StatsSection>
-        
-        <ButtonSection>
-          <ActionButton onClick={handlePracticeAgain}>
-            <i className="fas fa-redo-alt"></i> 再次练习
-          </ActionButton>
-          
-          <ActionButton primary onClick={handleBackToFormula}>
-            <i className="fas fa-book"></i> 返回学习
-          </ActionButton>
-        </ButtonSection>
-      </ResultCard>
+          <ButtonSection>
+            <ActionButton onClick={handlePracticeAgain}>
+              <i className="fas fa-redo-alt"></i> 再次练习
+            </ActionButton>
+            
+            <ActionButton primary onClick={handleBackToFormula}>
+              <i className="fas fa-book"></i> 返回学习
+            </ActionButton>
+          </ButtonSection>
+        </ResultCard>
+      </ContentContainer>
     </Container>
   );
 };

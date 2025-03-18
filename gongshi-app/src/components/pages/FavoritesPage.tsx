@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
+import PrintComponent from '../common/PrintComponent';
 
 const Container = styled.div`
   display: flex;
@@ -146,29 +147,6 @@ const EmptyState = styled.div`
   }
 `;
 
-const PrintButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background-color: ${props => props.theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-left: auto;
-  margin-bottom: 20px;
-  
-  &:hover {
-    background-color: ${props => `${props.theme.colors.primary}dd`};
-  }
-  
-  i {
-    font-size: 18px;
-  }
-`;
-
 // 模拟收藏数据
 const SAMPLE_FAVORITES = [
   {
@@ -254,9 +232,11 @@ const FavoritesPage = () => {
         
         {SAMPLE_FAVORITES.length > 0 ? (
           <>
-            <PrintButton onClick={handlePrintClick}>
-              <i className="fas fa-print"></i> 打印收藏公式
-            </PrintButton>
+            <PrintComponent 
+              type="favorite" 
+              buttonStyle="large" 
+              beforePrint={handlePrintClick}
+            />
             
             <FormulaGrid>
               {SAMPLE_FAVORITES.map(formula => (
