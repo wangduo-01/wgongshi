@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import Header from '../common/Header';
 
 const Container = styled.div`
   display: flex;
@@ -234,9 +233,16 @@ const ViewButton = styled.div`
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   
   &:hover {
     background-color: #e5e5ea;
+  }
+  
+  i {
+    font-size: 12px;
   }
 `;
 
@@ -259,57 +265,263 @@ const EmptyState = styled.div`
   }
 `;
 
-// 模拟练习记录数据
-const SAMPLE_RECORDS = [
+// 模态框样式
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 18px;
+  margin: 0;
+  color: #333;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const DetailsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+`;
+
+const DetailItem = styled.div`
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f8f8f8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f2f2f2;
+  }
+`;
+
+const DetailInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+`;
+
+const DetailDate = styled.div`
+  font-size: 14px;
+  color: #999;
+`;
+
+const DetailAccuracy = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+`;
+
+const ArrowIcon = styled.div`
+  color: #ccc;
+  font-size: 16px;
+`;
+
+interface PracticeRecord {
+  id: string;
+  formulaId: string;
+  formulaTitle: string;
+  date: string;
+  questionsCount: number;
+  accuracy: number;
+  timeSpent: string;
+  subject: 'math' | 'physics' | 'chemistry'; // 添加科目分类
+}
+
+interface AggregatedRecord {
+  formulaId: string;
+  formulaTitle: string;
+  lastPracticeDate: string;
+  totalPractices: number;
+  avgAccuracy: number;
+  lastAccuracy: number; // 添加最近一次练习的正确率
+  subject: 'math' | 'physics' | 'chemistry';
+  records: PracticeRecord[]; // 所有相关的练习记录
+}
+
+// 模拟练习记录数据，添加科目分类
+const SAMPLE_RECORDS: PracticeRecord[] = [
   {
     id: '1',
-    title: '圆周率公式练习',
+    formulaId: 'f1',
+    formulaTitle: '圆周率公式',
     date: '2023-10-15',
     questionsCount: 10,
     accuracy: 90,
     timeSpent: '10分钟',
+    subject: 'math'
   },
   {
     id: '2',
-    title: '面积公式练习',
+    formulaId: 'f2',
+    formulaTitle: '面积公式',
     date: '2023-10-12',
     questionsCount: 8,
     accuracy: 75,
     timeSpent: '8分钟',
+    subject: 'math'
   },
   {
     id: '3',
-    title: '体积公式练习',
+    formulaId: 'f3',
+    formulaTitle: '体积公式',
     date: '2023-10-10',
     questionsCount: 12,
     accuracy: 42,
     timeSpent: '15分钟',
+    subject: 'math'
   },
   {
     id: '4',
-    title: '勾股定理练习',
+    formulaId: 'f4',
+    formulaTitle: '勾股定理',
     date: '2023-10-08',
     questionsCount: 5,
     accuracy: 60,
     timeSpent: '5分钟',
+    subject: 'math'
   },
   {
     id: '5',
-    title: '多项式公式练习',
+    formulaId: 'f1',
+    formulaTitle: '圆周率公式',
     date: '2023-10-05',
     questionsCount: 7,
     accuracy: 85,
     timeSpent: '7分钟',
+    subject: 'math'
   },
   {
     id: '6',
-    title: '三角函数公式练习',
+    formulaId: 'f4',
+    formulaTitle: '勾股定理',
     date: '2023-10-03',
     questionsCount: 15,
-    accuracy: 60,
+    accuracy: 70,
     timeSpent: '20分钟',
+    subject: 'math'
   },
+  {
+    id: '7',
+    formulaId: 'p1',
+    formulaTitle: '牛顿第二定律',
+    date: '2023-10-14',
+    questionsCount: 8,
+    accuracy: 65,
+    timeSpent: '12分钟',
+    subject: 'physics'
+  },
+  {
+    id: '8',
+    formulaId: 'p2',
+    formulaTitle: '动能定理',
+    date: '2023-10-11',
+    questionsCount: 6,
+    accuracy: 80,
+    timeSpent: '9分钟',
+    subject: 'physics'
+  },
+  {
+    id: '9',
+    formulaId: 'c1',
+    formulaTitle: '质量守恒定律',
+    date: '2023-10-09',
+    questionsCount: 10,
+    accuracy: 75,
+    timeSpent: '15分钟',
+    subject: 'chemistry'
+  }
 ];
+
+// 聚合记录数据，将同一公式的多次练习聚合在一起
+const aggregateRecords = (records: PracticeRecord[]): AggregatedRecord[] => {
+  const formulaMap = new Map<string, PracticeRecord[]>();
+  
+  // 按公式ID分组记录
+  records.forEach(record => {
+    if (!formulaMap.has(record.formulaId)) {
+      formulaMap.set(record.formulaId, []);
+    }
+    formulaMap.get(record.formulaId)!.push(record);
+  });
+  
+  // 将分组数据转换为聚合记录
+  const aggregated: AggregatedRecord[] = [];
+  
+  formulaMap.forEach((practiceRecords, formulaId) => {
+    // 按日期降序排序
+    const sortedRecords = [...practiceRecords].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    
+    const totalPractices = sortedRecords.length;
+    const avgAccuracy = Math.round(
+      sortedRecords.reduce((sum, r) => sum + r.accuracy, 0) / totalPractices
+    );
+    // 获取最近一次练习的正确率
+    const lastAccuracy = sortedRecords[0].accuracy;
+    
+    aggregated.push({
+      formulaId,
+      formulaTitle: sortedRecords[0].formulaTitle,
+      lastPracticeDate: sortedRecords[0].date,
+      totalPractices,
+      avgAccuracy,
+      lastAccuracy,
+      subject: sortedRecords[0].subject,
+      records: sortedRecords
+    });
+  });
+  
+  // 按最近练习日期降序排序
+  return aggregated.sort(
+    (a, b) => new Date(b.lastPracticeDate).getTime() - new Date(a.lastPracticeDate).getTime()
+  );
+};
 
 // 记录详情页组件
 const RecordPage = () => {
@@ -320,17 +532,49 @@ const RecordPage = () => {
     navigate('/');
   };
   
-  const [activeTab, setActiveTab] = React.useState<'week' | 'month' | 'year' | 'all'>('week');
+  // 科目分类标签
+  type SubjectTab = 'all' | 'math' | 'physics' | 'chemistry';
+  const [activeTab, setActiveTab] = useState<SubjectTab>('all');
+  
+  // 聚合记录状态
+  const aggregatedRecords = aggregateRecords(SAMPLE_RECORDS);
+  
+  // 模态框状态
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<AggregatedRecord | null>(null);
+  
+  // 根据选择的标签过滤记录
+  const filteredRecords = activeTab === 'all' 
+    ? aggregatedRecords 
+    : aggregatedRecords.filter(record => record.subject === activeTab);
   
   // 计算统计数据
   const totalPractices = SAMPLE_RECORDS.length;
-  const totalQuestions = SAMPLE_RECORDS.reduce((sum, record) => sum + record.questionsCount, 0);
+  const totalFormulas = aggregatedRecords.length;
   const averageAccuracy = Math.round(
     SAMPLE_RECORDS.reduce((sum, record) => sum + record.accuracy, 0) / totalPractices
   );
   
-  const handleRecordClick = (id: string) => {
+  // 处理记录点击，显示详情模态框
+  const handleRecordClick = (record: AggregatedRecord) => {
+    setSelectedRecord(record);
+    setShowDetailModal(true);
+  };
+  
+  // 处理详情记录点击，跳转到练习报告页面
+  const handleDetailClick = (id: string) => {
     navigate(`/practice-result/${id}`);
+    setShowDetailModal(false);
+  };
+  
+  // 科目名称映射
+  const getSubjectName = (subject: SubjectTab): string => {
+    switch(subject) {
+      case 'math': return '数学';
+      case 'physics': return '物理';
+      case 'chemistry': return '化学';
+      default: return '全部';
+    }
   };
   
   return (
@@ -355,10 +599,10 @@ const RecordPage = () => {
           </StatCard>
           
           <StatCard>
-            <StatIcon><i className="fas fa-tasks"></i></StatIcon>
+            <StatIcon><i className="fas fa-book"></i></StatIcon>
             <StatInfo>
-              <StatValue>{totalQuestions}</StatValue>
-              <StatLabel>总题目数量</StatLabel>
+              <StatValue>{totalFormulas}</StatValue>
+              <StatLabel>练习公式数</StatLabel>
             </StatInfo>
           </StatCard>
           
@@ -366,7 +610,7 @@ const RecordPage = () => {
             <StatIcon><i className="fas fa-chart-line"></i></StatIcon>
             <StatInfo>
               <StatValue>{averageAccuracy}%</StatValue>
-              <StatLabel>平均正确率</StatLabel>
+              <StatLabel>总体正确率</StatLabel>
             </StatInfo>
           </StatCard>
         </StatsContainer>
@@ -375,49 +619,52 @@ const RecordPage = () => {
         
         <TabContainer>
           <Tab 
-            active={activeTab === 'week'}
-            onClick={() => setActiveTab('week')}
-          >
-            本周
-          </Tab>
-          <Tab 
-            active={activeTab === 'month'}
-            onClick={() => setActiveTab('month')}
-          >
-            本月
-          </Tab>
-          <Tab 
-            active={activeTab === 'year'}
-            onClick={() => setActiveTab('year')}
-          >
-            今年
-          </Tab>
-          <Tab 
             active={activeTab === 'all'}
             onClick={() => setActiveTab('all')}
           >
             全部
           </Tab>
+          <Tab 
+            active={activeTab === 'math'}
+            onClick={() => setActiveTab('math')}
+          >
+            数学
+          </Tab>
+          <Tab 
+            active={activeTab === 'physics'}
+            onClick={() => setActiveTab('physics')}
+          >
+            物理
+          </Tab>
+          <Tab 
+            active={activeTab === 'chemistry'}
+            onClick={() => setActiveTab('chemistry')}
+          >
+            化学
+          </Tab>
         </TabContainer>
         
-        {SAMPLE_RECORDS.length > 0 ? (
+        {filteredRecords.length > 0 ? (
           <RecordGrid>
-            {SAMPLE_RECORDS.map(record => (
+            {filteredRecords.map(record => (
               <RecordCard 
-                key={record.id}
-                onClick={() => handleRecordClick(record.id)}
+                key={record.formulaId}
+                onClick={() => handleRecordClick(record)}
               >
-                <RecordDate>{record.date}</RecordDate>
-                <RecordTitle>{record.title}</RecordTitle>
+                <RecordDate>{record.lastPracticeDate}</RecordDate>
+                <RecordTitle>{record.formulaTitle}</RecordTitle>
                 <RecordSummary>
-                  完成 {record.questionsCount} 道题，用时 {record.timeSpent}
+                  练习了 {record.totalPractices} 次
                 </RecordSummary>
                 <RecordFooter>
                   <AccuracyText>
-                    <AccuracyDot value={record.accuracy} />
-                    正确率 {record.accuracy}%
+                    <AccuracyDot value={record.lastAccuracy} />
+                    {record.lastAccuracy}% 上次练习
                   </AccuracyText>
-                  <ViewButton>查看详情</ViewButton>
+                  <ViewButton>
+                    查看详情
+                    <i className="fas fa-chevron-right"></i>
+                  </ViewButton>
                 </RecordFooter>
               </RecordCard>
             ))}
@@ -425,10 +672,44 @@ const RecordPage = () => {
         ) : (
           <EmptyState>
             <i className="far fa-clipboard"></i>
-            <div>暂无练习记录</div>
+            <div>暂无{getSubjectName(activeTab)}练习记录</div>
           </EmptyState>
         )}
       </Content>
+      
+      {/* 详情模态框 */}
+      {showDetailModal && selectedRecord && (
+        <ModalOverlay onClick={() => setShowDetailModal(false)}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>{selectedRecord.formulaTitle} - 练习记录</ModalTitle>
+              <CloseButton onClick={() => setShowDetailModal(false)}>
+                <i className="fas fa-times"></i>
+              </CloseButton>
+            </ModalHeader>
+            
+            <DetailsList>
+              {selectedRecord.records.map(record => (
+                <DetailItem 
+                  key={record.id}
+                  onClick={() => handleDetailClick(record.id)}
+                >
+                  <DetailInfo>
+                    <DetailDate>{record.date}</DetailDate>
+                    <DetailAccuracy>
+                      <AccuracyDot value={record.accuracy} />
+                      {record.accuracy}% 上次练习
+                    </DetailAccuracy>
+                  </DetailInfo>
+                  <ArrowIcon>
+                    <i className="fas fa-chevron-right"></i>
+                  </ArrowIcon>
+                </DetailItem>
+              ))}
+            </DetailsList>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Container>
   );
 };

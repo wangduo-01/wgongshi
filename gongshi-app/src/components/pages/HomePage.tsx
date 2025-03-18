@@ -115,6 +115,7 @@ const FormulaGrid = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   margin-top: 3px;
+  padding: 18px;
   
   @media (max-width: 1200px) {
     grid-template-columns: repeat(3, 1fr);
@@ -920,6 +921,88 @@ const NoResultsMessage = styled.div`
     margin-bottom: 15px;
     color: #ddd;
   }
+  
+  p {
+    margin: 5px 0;
+  }
+  
+  .suggestion {
+    font-size: 14px;
+    color: #bababa;
+    margin-top: 8px;
+  }
+`;
+
+// 优化筛选下拉框样式
+const FilterContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding-bottom: 15px;
+`;
+
+const FilterLabel = styled.span`
+  font-size: 14px;
+  color: #666;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  
+  i {
+    margin-right: 6px;
+    color: #4285f4;
+    font-size: 15px;
+  }
+`;
+
+const FilterSelectWrapper = styled.div`
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #666;
+    pointer-events: none;
+  }
+`;
+
+const FilterSelect = styled.select`
+  appearance: none;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px 30px 8px 12px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #4285f4;
+    box-shadow: 0 1px 4px rgba(66, 133, 244, 0.15);
+  }
+  
+  &:focus {
+    border-color: #4285f4;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.15);
+  }
+`;
+
+// TabBar的自定义包装容器
+const TabBarWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
 `;
 
 /**
@@ -945,7 +1028,6 @@ const HomePage = () => {
   const [formulas, setFormulas] = useState<Formula[]>([]);
   const [showLowAccuracyModal, setShowLowAccuracyModal] = useState(false);
   const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
-  const [showGradeSelectorModal, setShowGradeSelectorModal] = useState(false);
   // 添加收藏弹窗状态
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   
@@ -982,6 +1064,9 @@ const HomePage = () => {
   const [filteredFormulas, setFilteredFormulas] = useState<Formula[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // 添加练习状态筛选状态
+  const [practiceFilter, setPracticeFilter] = useState<string>('all');
+
   // 根据当前学段获取可用的学科标签
   const getSubjectsByGrade = (grade: string): SubjectTab[] => {
     // 统计各学科的公式数量
@@ -1001,7 +1086,7 @@ const HomePage = () => {
   };
 
   // 当前学段可用的学科
-  const availableSubjects = getSubjectsByGrade(currentGrade);
+  const availableSubjects = React.useMemo(() => getSubjectsByGrade(currentGrade), [currentGrade]);
 
   // 查找正确率低于阈值的公式
   const findLowAccuracyFormulas = (threshold: number = 30) => {
@@ -1088,7 +1173,7 @@ const HomePage = () => {
     }
   }, [location.pathname]);
 
-  // 根据当前选择的学科和学段筛选公式
+  // 根据当前选择的学科和学段筛选公式，并处理不可用学科的情况
   useEffect(() => {
     // 检查当前学科是否在可用学科中
     const isSubjectAvailable = availableSubjects.some(s => s.id === activeSubject);
@@ -1102,7 +1187,7 @@ const HomePage = () => {
     setFormulas(filteredFormulas);
     
     // 如果当前学科不可用，自动切换到数学
-    if (!isSubjectAvailable) {
+    if (!isSubjectAvailable && activeSubject !== 'math') {
       setActiveSubject('math');
     }
   }, [activeSubject, currentGrade, availableSubjects]);
@@ -1130,13 +1215,8 @@ const HomePage = () => {
   // 在组件挂载和路由变化时同步收藏状态
   useEffect(() => {
     syncFavoritesFromStorage();
-    // 根据当前状态筛选公式
-    const filteredFormulas = ALL_FORMULAS.filter(formula => 
-      formula.subject === activeSubject && formula.level === currentGrade
-    );
-    setFormulas(filteredFormulas);
   }, [location.pathname]); // 当路由变化时，重新同步收藏状态
-
+  
   // 处理公式卡片点击
   const handleFormulaClick = (formula: Formula) => {
     // 确保formula.id是字符串并记录日志
@@ -1226,67 +1306,73 @@ const HomePage = () => {
   };
   
   // 处理学段切换
-  const handleGradeSelect = (grade: string) => {
-    setCurrentGrade(grade);
-    setShowGradeSelectorModal(false);
+  const handleGradeSelect = () => {
+    // 从localStorage获取可能已更新的学段
+    const updatedGrade = localStorage.getItem('currentGrade') || '初中';
     
-    // 学段切换后，检查新学段是否有低准确率公式
-    // 只有在直接访问首页的情况下才显示弹窗
-    if (isDirectAccess.current) {
-      const lowAccuracyFormulasInNewGrade = ALL_FORMULAS.filter(
-        formula => formula.accuracy < 30 && formula.level === grade
-      );
+    // 如果学段已更改，更新状态
+    if (updatedGrade !== currentGrade) {
+      setCurrentGrade(updatedGrade);
       
-      if (lowAccuracyFormulasInNewGrade.length > 0) {
-        // 找出新学段中准确率最低的公式，或最近练习过的
-        const selectedFormula = lowAccuracyFormulasInNewGrade.sort((a, b) => {
-          if (a.lastPracticed && b.lastPracticed) {
-            return b.lastPracticed.getTime() - a.lastPracticed.getTime();
-          }
-          if (a.lastPracticed) return -1;
-          if (b.lastPracticed) return 1;
-          return a.accuracy - b.accuracy;
-        })[0];
+      // 学段切换后，检查新学段是否有低准确率公式
+      // 只有在直接访问首页的情况下才显示弹窗
+      if (isDirectAccess.current) {
+        const lowAccuracyFormulasInNewGrade = ALL_FORMULAS.filter(
+          formula => formula.accuracy < 30 && formula.level === updatedGrade
+        );
         
-        setSelectedFormula(selectedFormula);
-        setShowLowAccuracyModal(true);
-        markModalAsShown();
+        if (lowAccuracyFormulasInNewGrade.length > 0) {
+          // 找出新学段中准确率最低的公式，或最近练习过的
+          const selectedFormula = lowAccuracyFormulasInNewGrade.sort((a, b) => {
+            if (a.lastPracticed && b.lastPracticed) {
+              return b.lastPracticed.getTime() - a.lastPracticed.getTime();
+            }
+            if (a.lastPracticed) return -1;
+            if (b.lastPracticed) return 1;
+            return a.accuracy - b.accuracy;
+          })[0];
+          
+          setSelectedFormula(selectedFormula);
+          setShowLowAccuracyModal(true);
+          markModalAsShown();
+        }
       }
     }
   };
   
-  // 处理学段选择器点击
+  // 处理学段选择器点击 - 这个函数仍然保留，但现在只是触发handleGradeSelect
   const handleGradeSelectorClick = () => {
-    setShowGradeSelectorModal(true);
+    // 立即检查是否有新的学段选择
+    handleGradeSelect();
   };
-  
-  // 处理搜索按钮点击
-  const handleSearchClick = () => {
-    setIsSearching(true);
-  };
-  
-  // 处理取消搜索
-  const handleCancelSearch = () => {
-    setIsSearching(false);
-    setSearchQuery('');
-    setFilteredFormulas([]);
-    setShowSearchResults(false);
-  };
-  
+
   // 处理搜索输入变化
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
     
     if (query.trim()) {
-      // 实时过滤公式
+      // 更新搜索历史（仅在第一次输入关键词时）
+      if (!searchQuery.trim() && query.trim()) {
+        const newHistory = [query, ...searchHistory.filter(item => item !== query)].slice(0, 10);
+        setSearchHistory(newHistory);
+        localStorage.setItem('search_history', JSON.stringify(newHistory));
+      }
+      
+      // 实时执行搜索，仅筛选当前学段的公式，不限制学科
       const results = ALL_FORMULAS.filter(formula => 
-        formula.title.toLowerCase().includes(query.toLowerCase()) || 
-        formula.content.toLowerCase().includes(query.toLowerCase())
+        formula.level === currentGrade &&
+        (formula.title.toLowerCase().includes(query.toLowerCase()) || 
+         formula.content.toLowerCase().includes(query.toLowerCase()))
       );
-      setFilteredFormulas(results);
+      
+      // 更新搜索结果并显示
+      setSearchResults(results);
+      setShowSearchResults(true);
     } else {
-      setFilteredFormulas([]);
+      // 如果搜索框为空，清空搜索结果并隐藏结果区域
+      setSearchResults([]);
+      setShowSearchResults(false);
     }
   };
   
@@ -1300,9 +1386,8 @@ const HomePage = () => {
       setSearchHistory(newHistory);
       localStorage.setItem('search_history', JSON.stringify(newHistory));
       
-      // 执行搜索，过滤当前学科的公式
+      // 执行搜索，只筛选当前学段的公式，但不限制学科
       const results = ALL_FORMULAS.filter(formula => 
-        formula.subject === activeSubject && 
         formula.level === currentGrade &&
         (formula.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
          formula.content.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -1325,10 +1410,11 @@ const HomePage = () => {
     setSearchHistory(newHistory);
     localStorage.setItem('search_history', JSON.stringify(newHistory));
     
-    // 执行搜索
+    // 执行搜索，只筛选当前学段的公式，但不限制学科
     const results = ALL_FORMULAS.filter(formula => 
-      formula.title.toLowerCase().includes(term.toLowerCase()) || 
-      formula.content.toLowerCase().includes(term.toLowerCase())
+      formula.level === currentGrade &&
+      (formula.title.toLowerCase().includes(term.toLowerCase()) || 
+       formula.content.toLowerCase().includes(term.toLowerCase()))
     );
     setSearchResults(results);
     setShowSearchResults(true);
@@ -1417,14 +1503,55 @@ const HomePage = () => {
     navigate('/error-book');
   };
 
-  // 修改TabBar标签文本，显示搜索结果数量
+  // 修改TabBar标签文本，显示搜索结果数量和筛选后的公式数量
   const getTabLabel = (subjectId: string) => {
-    if (showSearchResults && subjectId === activeSubject) {
-      return `${subjectId === 'math' ? '数学' : subjectId === 'physics' ? '物理' : '化学'} (${searchResults.length})`;
+    if (showSearchResults) {
+      // 计算当前搜索结果中每个学科的数量
+      const subjectResults = searchResults.filter(f => f.subject === subjectId);
+      return `${subjectId === 'math' ? '数学' : subjectId === 'physics' ? '物理' : '化学'} (${subjectResults.length})`;
     }
     
+    // 筛选条件下的公式数量
+    if (practiceFilter !== 'all') {
+      const filteredCount = ALL_FORMULAS.filter(f => {
+        const isCurrentSubject = f.subject === subjectId && f.level === currentGrade;
+        if (!isCurrentSubject) return false;
+        
+        if (practiceFilter === 'practiced') return f.accuracy > 0;
+        if (practiceFilter === 'unpracticed') return f.accuracy <= 0;
+        return true;
+      }).length;
+      
+      return `${subjectId === 'math' ? '数学' : subjectId === 'physics' ? '物理' : '化学'} (${filteredCount})`;
+    }
+    
+    // 所有公式数量
     const count = ALL_FORMULAS.filter(f => f.subject === subjectId && f.level === currentGrade).length;
     return `${subjectId === 'math' ? '数学' : subjectId === 'physics' ? '物理' : '化学'} (${count})`;
+  };
+
+  // 获取最近练习的公式
+  const getLastPracticedFormula = React.useMemo(() => {
+    // 筛选出有lastPracticed属性的公式
+    const formulasWithLastPracticed = ALL_FORMULAS.filter(f => f.lastPracticed !== undefined);
+    
+    // 如果没有任何公式被练习过，返回null
+    if (formulasWithLastPracticed.length === 0) {
+      return null;
+    }
+    
+    // 找出最近练习的公式
+    return formulasWithLastPracticed.reduce((latest, current) => {
+      if (!latest.lastPracticed) return current;
+      if (!current.lastPracticed) return latest;
+      
+      return latest.lastPracticed.getTime() > current.lastPracticed.getTime() ? latest : current;
+    });
+  }, []);
+
+  // 添加一个处理筛选变更的函数
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPracticeFilter(e.target.value);
   };
 
   return (
@@ -1439,9 +1566,9 @@ const HomePage = () => {
           showGradeSelector
           showRightActions
           onGradeSelectorClick={handleGradeSelectorClick}
-          onSearchClick={handleSearchClick}
+          onSearchClick={() => setIsSearching(true)}
           onFavoritesClick={handleFavoritesClick}
-          onErrorBookClick={handleErrorBookClick}
+          onErrorBookClick={() => navigate('/error-book')}
           onRecordsClick={handleRecordsClick}
         />
       </PageHeader>
@@ -1458,15 +1585,26 @@ const HomePage = () => {
                 placeholder="请输入公式或公式名称"
               />
               {searchQuery.trim() && (
-                <ClearButton onClick={() => setSearchQuery('')}>
+                <ClearButton onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setSearchQuery(''); 
+                  setSearchResults([]);
+                  setShowSearchResults(false);
+                }}>
                   <i className="fas fa-times"></i>
                 </ClearButton>
               )}
-              <SearchIcon onClick={handleSearchSubmit}>
+              <SearchIcon onClick={(e) => { e.stopPropagation(); handleSearchSubmit(); }}>
                 <i className="fas fa-search"></i>
               </SearchIcon>
             </SearchInputWrapper>
-            <CancelButton type="button" onClick={handleCancelSearch}>
+            <CancelButton type="button" onClick={(e) => { 
+              e.stopPropagation(); 
+              setIsSearching(false); 
+              setSearchQuery(''); 
+              setSearchResults([]);
+              setShowSearchResults(false);
+            }}>
               取消
             </CancelButton>
           </SearchBarContainer>
@@ -1481,7 +1619,7 @@ const HomePage = () => {
             <i className="fas fa-history"></i>
             <span>练习记录</span>
           </ActionButton>
-          <ActionButton onClick={handleSearchClick}>
+          <ActionButton onClick={() => setIsSearching(true)}>
             <i className="fas fa-search"></i>
             <span>搜索公式</span>
           </ActionButton>
@@ -1489,22 +1627,40 @@ const HomePage = () => {
         </ActionBar>
       )}
 
-      <TabBar 
-        tabs={availableSubjects.map(subject => ({
-          ...subject,
-          label: getTabLabel(subject.id)
-        }))}
-        activeTab={activeSubject}
-        onTabChange={handleTabChange}
-      />
-      
+      {/* 使用TabBarWrapper替换之前的TabBarWithFilterContainer */}
+      <TabBarWrapper>
+        <TabBar 
+          tabs={availableSubjects.map(subject => ({
+            ...subject,
+            label: getTabLabel(subject.id)
+          }))}
+          activeTab={activeSubject}
+          onTabChange={handleTabChange}
+        />
+        
+        <FilterContainer>
+          <FilterLabel>
+            <i className="fas fa-filter"></i>
+            学习状态
+          </FilterLabel>
+          <FilterSelectWrapper>
+            <FilterSelect value={practiceFilter} onChange={handleFilterChange}>
+              <option value="all">全部公式</option>
+              <option value="practiced">已练习公式</option>
+              <option value="unpracticed">未练习公式</option>
+            </FilterSelect>
+          </FilterSelectWrapper>
+        </FilterContainer>
+      </TabBarWrapper>
+
       <FormulaGridContainer>
         <FormulaGrid>
           {/* 根据是否在搜索状态显示不同的公式列表 */}
           {showSearchResults ? (
-            searchResults.length > 0 ? (
-              searchResults.map(formula => {
+            searchResults.filter(formula => formula.subject === activeSubject).length > 0 ? (
+              searchResults.filter(formula => formula.subject === activeSubject).map(formula => {
                 formula.id = String(formula.id);
+                const isLastPracticed = !!getLastPracticedFormula && formula.id === getLastPracticedFormula.id;
                 return (
                   <FormulaCard
                     key={formula.id}
@@ -1512,6 +1668,8 @@ const HomePage = () => {
                     content={formula.content}
                     accuracy={formula.accuracy}
                     isFavorite={formula.isFavorite}
+                    isLastPracticed={isLastPracticed}
+                    searchQuery={searchQuery}
                     onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
                     onPracticeClick={() => handlePracticeClick(formula)}
                     onClick={() => handleFormulaClick(formula)}
@@ -1521,25 +1679,56 @@ const HomePage = () => {
             ) : (
               <NoResultsMessage>
                 <i className="fas fa-search"></i>
-                暂无结果
+                <div>
+                  <p>当前学科中未找到与"{searchQuery}"相关的{activeSubject === 'math' ? '数学' : activeSubject === 'physics' ? '物理' : '化学'}公式</p>
+                  {searchResults.length > 0 ? (
+                    <p className="suggestion">已在其他学科找到匹配结果，请点击上方对应标签查看</p>
+                  ) : (
+                    <p className="suggestion">可尝试其他关键词或切换学科查找</p>
+                  )}
+                </div>
               </NoResultsMessage>
             )
           ) : (
-            formulas.map(formula => {
-              formula.id = String(formula.id);
-              return (
-                <FormulaCard
-                  key={formula.id}
-                  title={formula.title}
-                  content={formula.content}
-                  accuracy={formula.accuracy}
-                  isFavorite={formula.isFavorite}
-                  onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
-                  onPracticeClick={() => handlePracticeClick(formula)}
-                  onClick={() => handleFormulaClick(formula)}
-                />
-              );
-            })
+            (() => {
+              const filteredList = formulas.filter(formula => {
+                if (practiceFilter === 'all') return true;
+                if (practiceFilter === 'practiced') return formula.accuracy > 0;
+                if (practiceFilter === 'unpracticed') return formula.accuracy <= 0;
+                return true;
+              });
+              
+              if (filteredList.length === 0) {
+                return (
+                  <NoResultsMessage>
+                    <i className="fas fa-filter"></i>
+                    <div>
+                      <p>当前学科下没有{practiceFilter === 'practiced' ? '已练习' : '未练习'}的公式</p>
+                      <p className="suggestion">可以尝试切换筛选条件或学科</p>
+                    </div>
+                  </NoResultsMessage>
+                );
+              }
+              
+              return filteredList.map(formula => {
+                formula.id = String(formula.id);
+                const isLastPracticed = !!getLastPracticedFormula && formula.id === getLastPracticedFormula.id;
+                return (
+                  <FormulaCard
+                    key={formula.id}
+                    title={formula.title}
+                    content={formula.content}
+                    accuracy={formula.accuracy}
+                    isFavorite={formula.isFavorite}
+                    isLastPracticed={isLastPracticed}
+                    searchQuery={searchQuery}
+                    onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
+                    onPracticeClick={() => handlePracticeClick(formula)}
+                    onClick={() => handleFormulaClick(formula)}
+                  />
+                );
+              });
+            })()
           )}
         </FormulaGrid>
       </FormulaGridContainer>
@@ -1567,14 +1756,6 @@ const HomePage = () => {
           name: "fas fa-graduation-cap",
           color: "#4a89dc"
         }}
-      />
-      
-      {/* 学段选择器弹窗 */}
-      <GradeSelectorModal 
-        isOpen={showGradeSelectorModal}
-        currentGrade={currentGrade}
-        onSelect={handleGradeSelect}
-        onClose={() => setShowGradeSelectorModal(false)}
       />
       
       {/* 收藏公式弹窗 */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormulaCard from './FormulaCard';
 import PrintComponent from './PrintComponent';
@@ -177,7 +177,7 @@ const FormulaGrid = styled.div`
   }
 `;
 
-// 定义组件属性接口
+// 将Formula接口保留下来，但在最后我们会在FavoritesModalProps里添加searchQuery属性
 interface Formula {
   id: string;
   title: string;
@@ -190,6 +190,7 @@ interface Formula {
   favoriteTimestamp?: number;
 }
 
+// 定义接收的props
 interface FavoritesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -198,6 +199,7 @@ interface FavoritesModalProps {
   onPracticeClick: (formula: Formula) => void;
   onFormulaClick: (formula: Formula) => void;
   onPrintClick: () => void;
+  searchQuery?: string; // 添加搜索关键字属性
 }
 
 const FavoritesModal: React.FC<FavoritesModalProps> = ({
@@ -207,7 +209,8 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({
   onFavoriteToggle,
   onPracticeClick,
   onFormulaClick,
-  onPrintClick
+  onPrintClick,
+  searchQuery
 }) => {
   // 分类标签状态
   const [activeFilter, setActiveFilter] = React.useState('all');
@@ -313,6 +316,7 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({
                 onFavoriteToggle={() => onFavoriteToggle(formula.id)}
                 onPracticeClick={() => onPracticeClick(formula)}
                 onClick={() => handleFormulaClick(formula)}
+                searchQuery={searchQuery}
               />
             ))}
           </FormulaGrid>

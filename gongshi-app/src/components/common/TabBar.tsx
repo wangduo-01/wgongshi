@@ -15,7 +15,7 @@ interface TabBarProps {
 const TabBarContainer = styled.div`
   display: flex;
   border-bottom: 1px solid #eee;
-  margin-bottom: 20px;
+  // margin-bottom: 20px;
   overflow-x: auto;
   
   &::-webkit-scrollbar {
@@ -31,7 +31,7 @@ interface TabProps {
 }
 
 const Tab = styled.div<TabProps>`
-  padding: 15px 25px;
+  padding: 25px 25px;
   cursor: pointer;
   position: relative;
   flex-shrink: 0;

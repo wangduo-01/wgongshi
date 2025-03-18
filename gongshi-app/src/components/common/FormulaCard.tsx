@@ -6,6 +6,8 @@ interface FormulaCardProps {
   content: string;
   accuracy: number;
   isFavorite: boolean;
+  isLastPracticed?: boolean;
+  searchQuery?: string;
   onClick: () => void;
   onFavoriteToggle: () => void;
   onPracticeClick: () => void;
@@ -15,7 +17,7 @@ const Card = styled.div`
   background-color: white;
   border-radius: 12px;
   padding: 10px 15px;
-  box-shadow: 0 0 35px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 35px 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -40,12 +42,16 @@ const TitleGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
 `;
 
 const Title = styled.div`
   font-size: 20px;
   color: #333;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 `;
 
 const Content = styled.div`
@@ -85,18 +91,19 @@ const MultiLineContent = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 1.2;
-    max-height: 90px;
+    max-height: 85px;
     text-align: center;
   }
 `;
 
 const CardFooter = styled.div`
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   align-items: center;
-  margin-top: 0;
-  padding-top: 0;
+  margin-top: 5px;
+  padding-top: 5px;
   height: 30px;
+  position: relative;
 `;
 
 const ActionButton = styled.button`
@@ -144,22 +151,49 @@ const StarButton = styled(ActionButton) <{ active: boolean }>`
   }
 `;
 
+// 上次练习标签组件
+const LastPracticedBadge = styled.div`
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+  background-color: rgba(74, 137, 220, 0.15);
+  color: #4a89dc;
+  border: 1px solid rgba(74, 137, 220, 0.2);
+`;
+
+// 恢复AccuracyBadgeProps接口
 interface AccuracyBadgeProps {
   accuracy: number;
 }
 
-const AccuracyBadge = styled.div<AccuracyBadgeProps>`
-  color: white;
-  font-size: 14px;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-weight: 500;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+// 重新添加练习正确率标签组件，但移到公式标题旁
+const AccuracyBadge = styled.span<AccuracyBadgeProps>`
+  font-size: 12px;
+  font-weight: 400;
+  padding: 2px 8px;
+  border-radius: 6px;
   background-color: ${props => {
-    if (props.accuracy >= 80) return '#4cd964';
-    if (props.accuracy >= 50) return '#ff9500';
-    return '#ff3b30';
+    if (props.accuracy >= 80) return 'rgba(76, 217, 100, 0.15)';
+    if (props.accuracy >= 50) return 'rgba(255, 149, 0, 0.15)';
+    return 'rgba(255, 59, 48, 0.15)';
   }};
+  color: ${props => {
+    if (props.accuracy >= 80) return '#388e3c';
+    if (props.accuracy >= 50) return '#cb7200';
+    return '#c41e25';
+  }};
+  border: 1px solid ${props => {
+    if (props.accuracy >= 80) return 'rgba(76, 217, 100, 0.2)';
+    if (props.accuracy >= 50) return 'rgba(255, 149, 0, 0.2)';
+    return 'rgba(255, 59, 48, 0.2)';
+  }};
+`;
+
+// 添加高亮文本的样式组件
+const HighlightedText = styled.span`
+  color: #e53935;
+  font-weight: 500;
 `;
 
 const FormulaCard: React.FC<FormulaCardProps> = ({
@@ -167,6 +201,8 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
   content,
   accuracy,
   isFavorite,
+  isLastPracticed,
+  searchQuery,
   onClick,
   onFavoriteToggle,
   onPracticeClick
@@ -182,13 +218,33 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
     }
   };
 
+  // 高亮显示搜索关键字的函数
+  const highlightSearchQuery = (text: string): React.ReactNode => {
+    if (!searchQuery || searchQuery.trim() === '') {
+      return text;
+    }
+
+    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+    return parts.map((part, index) => {
+      if (part.toLowerCase() === searchQuery.toLowerCase()) {
+        return <HighlightedText key={index}>{part}</HighlightedText>;
+      }
+      return part;
+    });
+  };
+
   return (
     <Card onClick={handleCardClick}>
       <TitleContainer>
         <TitleGroup>
-          <Title>{title}</Title>
-          {accuracy > 0 && (
-            <AccuracyBadge accuracy={accuracy}>{accuracy}%</AccuracyBadge>
+          <Title>
+            {highlightSearchQuery(title)}
+            {accuracy > 0 && (
+              <AccuracyBadge accuracy={accuracy}>正确率：{accuracy}%</AccuracyBadge>
+            )}
+          </Title>
+          {isLastPracticed && (
+            <LastPracticedBadge>上次练习</LastPracticedBadge>
           )}
         </TitleGroup>
         <StarButton
@@ -200,7 +256,7 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
       </TitleContainer>
       
       <MultiLineContent title={content}>
-        <div>{content}</div>
+        <div>{highlightSearchQuery(content)}</div>
       </MultiLineContent>
       
       <CardFooter>

@@ -344,12 +344,35 @@ const RelatedItem = styled.button`
   color: #4a89dc;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative; /* 添加相对定位，用于放置学段标签 */
   
   &:hover {
     background-color: #e0ecff;
     transform: translateY(-2px);
     box-shadow: 0 3px 8px rgba(74, 137, 220, 0.15);
   }
+`;
+
+// 添加学段标签组件
+const LevelTag = styled.span<{ level?: string }>`
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: ${props => {
+    switch (props.level) {
+      case '小学': return '#4cd964'; // 绿色
+      case '初中': return '#ffcc00'; // 黄色
+      case '高中': return '#ff9500'; // 橙色
+      default: return '#aaaaaa'; // 灰色
+    }
+  }};
+  color: ${props => props.level === '小学' ? '#fff' : '#333'};
+  font-weight: 600;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
 const ExampleSection = styled.div`
@@ -1354,9 +1377,9 @@ const FormulaDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [formula, setFormula] = useState<Formula | null>(null);
-  const [prevFormula, setPrevFormula] = useState<Formula | null>(null);
-  const [nextFormula, setNextFormula] = useState<Formula | null>(null);
+  const [formula, setFormula] = useState<any>(null);
+  const [prevFormula, setPrevFormula] = useState<any>(null);
+  const [nextFormula, setNextFormula] = useState<any>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   // 添加返回上一个公式功能所需的状态
@@ -1371,6 +1394,20 @@ const FormulaDetailPage: React.FC = () => {
     formatIssue: false
   });
   const [feedbackContent, setFeedbackContent] = useState('');
+
+  // 添加函数，根据公式ID获取公式完整信息
+  const getFormulaById = (formulaId: string) => {
+    return ALL_FORMULAS.find(f => String(f.id) === String(formulaId));
+  };
+
+  // 添加函数，获取相关公式的学段信息
+  const getRelatedFormulaWithLevel = (item: { id: string, title: string }) => {
+    const fullFormula = getFormulaById(item.id);
+    return {
+      ...item,
+      level: fullFormula?.level || ''
+    };
+  };
 
   // 加载公式数据
   useEffect(() => {
@@ -1722,14 +1759,21 @@ const FormulaDetailPage: React.FC = () => {
                   <RelatedCategory>
                     <SectionTitle>基础公式</SectionTitle>
                     <RelatedList>
-                      {formula.relatedLower.map((item: any) => (
-                        <RelatedItem
-                          key={item.id}
-                          onClick={() => handleRelatedItemClick(item.id)}
-                        >
-                          {item.title}
-                        </RelatedItem>
-                      ))}
+                      {formula.relatedLower.map((item: any) => {
+                        // 获取包含学段信息的完整相关公式
+                        const relatedWithLevel = getRelatedFormulaWithLevel(item);
+                        return (
+                          <RelatedItem
+                            key={relatedWithLevel.id}
+                            onClick={() => handleRelatedItemClick(relatedWithLevel.id)}
+                          >
+                            {relatedWithLevel.title}
+                            {relatedWithLevel.level && (
+                              <LevelTag level={relatedWithLevel.level}>{relatedWithLevel.level}</LevelTag>
+                            )}
+                          </RelatedItem>
+                        );
+                      })}
                     </RelatedList>
                   </RelatedCategory>
                 )}
@@ -1738,14 +1782,21 @@ const FormulaDetailPage: React.FC = () => {
                   <RelatedCategory>
                     <SectionTitle>进阶公式</SectionTitle>
                     <RelatedList>
-                      {formula.relatedHigher.map((item: any) => (
-                        <RelatedItem
-                          key={item.id}
-                          onClick={() => handleRelatedItemClick(item.id)}
-                        >
-                          {item.title}
-                        </RelatedItem>
-                      ))}
+                      {formula.relatedHigher.map((item: any) => {
+                        // 获取包含学段信息的完整相关公式
+                        const relatedWithLevel = getRelatedFormulaWithLevel(item);
+                        return (
+                          <RelatedItem
+                            key={relatedWithLevel.id}
+                            onClick={() => handleRelatedItemClick(relatedWithLevel.id)}
+                          >
+                            {relatedWithLevel.title}
+                            {relatedWithLevel.level && (
+                              <LevelTag level={relatedWithLevel.level}>{relatedWithLevel.level}</LevelTag>
+                            )}
+                          </RelatedItem>
+                        );
+                      })}
                     </RelatedList>
                   </RelatedCategory>
                 )}

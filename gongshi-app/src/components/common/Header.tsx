@@ -1,5 +1,7 @@
+
 import React from 'react';
 import styled from 'styled-components';
+import GradeSelectorDropdown from './GradeSelectorDropdown';
 
 // 接口定义
 export interface HeaderProps {
@@ -46,20 +48,6 @@ const Title = styled.h1`
   color: white;
 `;
 
-const GradeSelector = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 16px;
-  margin-left: 15px;
-`;
-
-const ChevronIcon = styled.i`
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-`;
-
 const ActionButton = styled.button`
   background: none;
   border: none;
@@ -89,7 +77,7 @@ const BackButton = styled(ActionButton)`
  * 功能：
  * - 显示标题
  * - 支持返回按钮
- * - 支持学段/年级选择器
+ * - 支持学段/年级选择器(现在采用下拉框样式)
  * - 支持搜索、收藏、错题本和记录按钮
  */
 const Header: React.FC<HeaderProps> = ({
@@ -113,6 +101,17 @@ const Header: React.FC<HeaderProps> = ({
   
   const currentGrade = gradeText || extractGradeFromTitle(title);
   
+  // 处理年级选择
+  const handleGradeSelect = (grade: string) => {
+    // 调用父组件传入的回调函数
+    if (onGradeSelectorClick) {
+      // 存储当前选择的年级
+      localStorage.setItem('currentGrade', grade);
+      // 通知父组件
+      onGradeSelectorClick();
+    }
+  };
+  
   return (
     <HeaderContainer>
       <LeftSection>
@@ -125,13 +124,10 @@ const Header: React.FC<HeaderProps> = ({
         <Title>{title}</Title>
         
         {showGradeSelector && (
-          <GradeSelector onClick={onGradeSelectorClick}>
-            当前学段:
-            <span style={{ fontWeight: 500, color: 'white', marginLeft: '5px' }}>
-              {currentGrade}
-            </span>
-            <ChevronIcon className="fas fa-chevron-down" />
-          </GradeSelector>
+          <GradeSelectorDropdown 
+            currentGrade={currentGrade}
+            onSelect={handleGradeSelect}
+          />
         )}
       </LeftSection>
       
