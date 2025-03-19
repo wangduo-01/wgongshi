@@ -25,6 +25,7 @@ const Card = styled.div`
   transition: all 0.3s ease;
   position: relative;
   height: 180px;
+  overflow: hidden;
   
   &:hover {
     transform: translateY(-3px);
