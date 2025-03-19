@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import FormulaVisualization from '../common/FormulaVisualization';
 
 // 添加Formula接口定义
 interface Formula {
@@ -237,13 +238,21 @@ const RightColumn = styled.div`
 `;
 
 const FormulaSection = styled.div`
-  padding-bottom: 30px;
+  // padding-bottom: 30px;
   margin-bottom: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
   flex: 1;
   position: relative;
+`;
+
+// 为公式可视化添加样式容器
+const VisualizationContainer = styled.div`
+  width: 240px;
+  height: 180px;
+  margin: 20px auto;
+  opacity: 0.9;
 `;
 
 const Formula = styled.div`
@@ -1384,6 +1393,8 @@ const FormulaDetailPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   // 添加返回上一个公式功能所需的状态
   const [previousFormula, setPreviousFormula] = useState<any>(null);
+  // 添加关闭动画状态
+  const [isClosing, setIsClosing] = useState(false);
 
   // 修改反馈相关状态
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -1505,7 +1516,9 @@ const FormulaDetailPage: React.FC = () => {
 
   // 处理练习按钮点击
   const handlePracticeClick = () => {
-    navigate(`/practice/${id}`);
+    console.log("练习按钮点击，从公式详情页进入练习页");
+    // 在URL中添加来源参数，表示从公式详情页进入
+    navigate(`/practice/${id}?from=formula`);
   };
 
   // 显示提示消息
@@ -1631,33 +1644,37 @@ const FormulaDetailPage: React.FC = () => {
   // 处理关闭弹窗按钮点击
   const handleCloseModal = () => {
     // 为关闭动画添加过渡效果
-    const container = document.querySelector('.formula-detail-container');
-    if (container) {
-      container.classList.add('closing');
-      
-      // 等待动画完成后再导航
-      setTimeout(() => {
-        // 检查是否是从收藏弹窗进入的
-        const fromFavorites = sessionStorage.getItem('fromFavoritesModal') === 'true';
-        
-        if (fromFavorites) {
-          // 直接设置一个标记，表示详情页已关闭且需要打开收藏弹窗
-          sessionStorage.setItem('openFavoritesModalDirectly', 'true');
-        }
-        
-        // 保持fromFavoritesModal标记不变，只用于导航逻辑
-        navigate('/', { replace: true }); // 使用replace模式避免在历史记录中添加多余的条目
-      }, 300); // 延长动画时间，提供更平滑的体验
-    } else {
-      // 检查是否是从收藏弹窗进入的
-      const fromFavorites = sessionStorage.getItem('fromFavoritesModal') === 'true';
-      
-      if (fromFavorites) {
+    console.log("关闭按钮点击，检查来源");
+    
+    // 设置关闭状态以触发动画
+    setIsClosing(true);
+    
+    // 获取from参数
+    const fromPage = new URLSearchParams(location.search).get('from') || 'home';
+    // 检查是否是从收藏弹窗进入的
+    const fromFavoritesModal = sessionStorage.getItem('fromFavoritesModal') === 'true';
+    
+    console.log("fromPage参数:", fromPage);
+    console.log("fromFavoritesModal标记:", fromFavoritesModal);
+    
+    // 等待动画完成后再导航
+    setTimeout(() => {
+      if (fromPage === 'favorites' || fromFavoritesModal) {
+        console.log("从收藏进入，返回首页并打开收藏弹窗");
+        // 设置标记，表示需要在首页打开收藏弹窗
         sessionStorage.setItem('openFavoritesModalDirectly', 'true');
+        navigate('/', { replace: true });
+      } else if (fromPage === 'errorbook') {
+        console.log("从错题本进入，返回错题本页面");
+        navigate('/error-book', { replace: true });
+      } else if (fromPage === 'records') {
+        console.log("从记录页进入，返回记录页面");
+        navigate('/record', { replace: true });
+      } else {
+        console.log("从其他页面进入，返回首页");
+        navigate('/', { replace: true });
       }
-      
-      navigate('/', { replace: true });
-    }
+    }, 300);
   };
 
   // 添加返回上一个公式的处理函数
@@ -1682,7 +1699,7 @@ const FormulaDetailPage: React.FC = () => {
   }
 
   return (
-    <Container className="formula-detail-container">
+    <Container className={isClosing ? 'formula-detail-container closing' : 'formula-detail-container'}>
       <BackButton onClick={handleBackClick}>
         <i className="fas fa-arrow-left"></i> 返回公式列表
       </BackButton>
@@ -1746,6 +1763,11 @@ const FormulaDetailPage: React.FC = () => {
                   {formula.description}
                 </FormulaDescription>
               )}
+              
+              {/* 添加公式可视化组件，放置在公式说明下方 */}
+              <VisualizationContainer>
+                <FormulaVisualization formulaTitle={formula.title || ''} />
+              </VisualizationContainer>
 
               {/* 将反馈按钮移到公式区域(FormulaSection)的右下角 */}
               <CornerFeedbackButton onClick={handleFeedbackClick}>

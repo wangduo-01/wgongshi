@@ -25,35 +25,17 @@ const ModalOverlay = styled.div<{ isOpen: boolean }>`
 const ModalContainer = styled.div<{ isOpen: boolean }>`
   background-color: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 0;
   width: 90%;
   max-width: 90vw;
   height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   transform: ${({ isOpen }) => isOpen ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.97)'};
   opacity: ${({ isOpen }) => isOpen ? '1' : '0'};
   transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
               opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* 添加自定义滚动条样式 */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #ddd;
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #c1c1c1;
-  }
 `;
 
 const ModalHeader = styled.div`
@@ -61,11 +43,10 @@ const ModalHeader = styled.div`
   justify-content: center;
   align-items: center;
   position: relative;
-  margin: -24px -24px 20px -24px;
   padding: 15px 0;
-  border-bottom: 1px solid #eee;
   background-color: #4a89dc;
   border-radius: 16px 16px 0 0;
+  flex-shrink: 0;
 `;
 
 const ModalTitle = styled.h2`
@@ -92,13 +73,42 @@ const CloseButton = styled.button`
   }
 `;
 
+const ContentArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 24px;
+  
+  /* 添加自定义滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #c1c1c1;
+  }
+`;
+
 // 添加一个新的容器组件，用于将标签和打印按钮放在同一行
 const ActionRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
+  padding: 0px 24px;
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #eee;
 `;
 
 const TabsContainer = styled.div`
@@ -257,70 +267,72 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({
           </CloseButton>
         </ModalHeader>
         
-        {/* 将标签和打印按钮放在同一行 */}
-        <ActionRow>
-          <TabsContainer>
-            <Tab 
-              active={activeFilter === 'all'} 
-              onClick={() => setActiveFilter('all')}
-            >
-              全部 ({favoriteFormulas.length})
-            </Tab>
-            <Tab 
-              active={activeFilter === 'math'} 
-              onClick={() => setActiveFilter('math')}
-            >
-              数学 ({favoriteFormulas.filter(f => f.subject === 'math').length})
-            </Tab>
-            <Tab 
-              active={activeFilter === 'physics'} 
-              onClick={() => setActiveFilter('physics')}
-            >
-              物理 ({favoriteFormulas.filter(f => f.subject === 'physics').length})
-            </Tab>
-            <Tab 
-              active={activeFilter === 'chemistry'} 
-              onClick={() => setActiveFilter('chemistry')}
-            >
-              化学 ({favoriteFormulas.filter(f => f.subject === 'chemistry').length})
-            </Tab>
-          </TabsContainer>
-          
-          {filteredFormulas.length > 0 && (
-            <PrintComponent 
-              type="favorite" 
-              beforePrint={onPrintClick}
-            />
-          )}
-        </ActionRow>
-        
-        {filteredFormulas.length === 0 ? (
-          <EmptyState>
-            <i className="far fa-star"></i>
-            <div>
-              {activeFilter === 'all' && '暂无收藏的公式，快去收藏喜欢的公式吧！'}
-              {activeFilter === 'math' && '暂无收藏的数学公式，快去收藏喜欢的数学公式吧！'}
-              {activeFilter === 'physics' && '暂无收藏的物理公式，快去收藏喜欢的物理公式吧！'}
-              {activeFilter === 'chemistry' && '暂无收藏的化学公式，快去收藏喜欢的化学公式吧！'}
-            </div>
-          </EmptyState>
-        ) : (
-          <FormulaGrid>
-            {filteredFormulas.map(formula => (
-              <FormulaCard
-                key={formula.id}
-                title={formula.title}
-                content={formula.content}
-                accuracy={formula.accuracy}
-                isFavorite={formula.isFavorite}
-                onFavoriteToggle={() => onFavoriteToggle(formula.id)}
-                onPracticeClick={() => onPracticeClick(formula)}
-                onClick={() => handleFormulaClick(formula)}
-                searchQuery={searchQuery}
+        <ContentArea>
+          {/* 将标签和打印按钮放在同一行 */}
+          <ActionRow>
+            <TabsContainer>
+              <Tab 
+                active={activeFilter === 'all'} 
+                onClick={() => setActiveFilter('all')}
+              >
+                全部 ({favoriteFormulas.length})
+              </Tab>
+              <Tab 
+                active={activeFilter === 'math'} 
+                onClick={() => setActiveFilter('math')}
+              >
+                数学 ({favoriteFormulas.filter(f => f.subject === 'math').length})
+              </Tab>
+              <Tab 
+                active={activeFilter === 'physics'} 
+                onClick={() => setActiveFilter('physics')}
+              >
+                物理 ({favoriteFormulas.filter(f => f.subject === 'physics').length})
+              </Tab>
+              <Tab 
+                active={activeFilter === 'chemistry'} 
+                onClick={() => setActiveFilter('chemistry')}
+              >
+                化学 ({favoriteFormulas.filter(f => f.subject === 'chemistry').length})
+              </Tab>
+            </TabsContainer>
+            
+            {filteredFormulas.length > 0 && (
+              <PrintComponent 
+                type="favorite" 
+                beforePrint={onPrintClick}
               />
-            ))}
-          </FormulaGrid>
-        )}
+            )}
+          </ActionRow>
+          
+          {filteredFormulas.length === 0 ? (
+            <EmptyState>
+              <i className="far fa-star"></i>
+              <div>
+                {activeFilter === 'all' && '暂无收藏的公式，快去收藏喜欢的公式吧！'}
+                {activeFilter === 'math' && '暂无收藏的数学公式，快去收藏喜欢的数学公式吧！'}
+                {activeFilter === 'physics' && '暂无收藏的物理公式，快去收藏喜欢的物理公式吧！'}
+                {activeFilter === 'chemistry' && '暂无收藏的化学公式，快去收藏喜欢的化学公式吧！'}
+              </div>
+            </EmptyState>
+          ) : (
+            <FormulaGrid>
+              {filteredFormulas.map(formula => (
+                <FormulaCard
+                  key={formula.id}
+                  title={formula.title}
+                  content={formula.content}
+                  accuracy={formula.accuracy}
+                  isFavorite={formula.isFavorite}
+                  onFavoriteToggle={() => onFavoriteToggle(formula.id)}
+                  onPracticeClick={() => onPracticeClick(formula)}
+                  onClick={() => handleFormulaClick(formula)}
+                  searchQuery={searchQuery}
+                />
+              ))}
+            </FormulaGrid>
+          )}
+        </ContentArea>
       </ModalContainer>
     </ModalOverlay>
   );

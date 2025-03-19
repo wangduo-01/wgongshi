@@ -7,13 +7,16 @@ const NavContainer = styled.div`
   justify-content: space-around;
   align-items: center;
   background-color: white;
-  height: 60px;
+  height: 68px;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
   z-index: 100;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 0 12px;
 `;
 
 const NavItem = styled.div<{ isActive: boolean }>`
@@ -23,18 +26,44 @@ const NavItem = styled.div<{ isActive: boolean }>`
   justify-content: center;
   flex: 1;
   height: 100%;
-  color: ${props => props.isActive ? props.theme.colors.primary : props.theme.colors.text.secondary};
-  transition: color 0.2s;
+  color: ${props => props.isActive ? '#4a89dc' : '#8a94a6'};
+  transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
+  padding: 8px 0;
+  
+  &:hover {
+    color: ${props => props.isActive ? '#3a6cad' : '#64748b'};
+  }
+  
+  &:before {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    height: 4px;
+    width: ${props => props.isActive ? '25px' : '0'};
+    background-color: ${props => props.isActive ? '#4a89dc' : 'transparent'};
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    opacity: ${props => props.isActive ? '1' : '0'};
+    transform: translateY(12px);
+  }
 `;
 
 const IconContainer = styled.div`
   font-size: 22px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+  
+  ${NavItem}:hover & {
+    transform: translateY(-2px);
+  }
 `;
 
 const Label = styled.div`
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 `;
 
 export interface BottomNavProps {

@@ -17,17 +17,31 @@ const DropdownButton = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.95);
   font-size: 16px;
-  margin-left: 15px;
+  // margin-left: 15px;
   cursor: pointer;
   user-select: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0px);
+  }
 `;
 
 const ChevronIcon = styled.i`
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  transition: transform 0.2s ease;
+  color: rgba(255, 255, 255, 0.95);
+  transition: all 0.3s ease;
   
   &.open {
     transform: rotate(180deg);
@@ -36,24 +50,29 @@ const ChevronIcon = styled.i`
 
 const DropdownMenu = styled.div<{ isOpen: boolean }>`
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 50%;
-  margin-top: 10px;
-  min-width: 120px;
+  transform: translateX(-50%);
+  min-width: 150px;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
   z-index: 1000;
   overflow: hidden;
-  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
+  opacity: ${({ isOpen }) => (isOpen ? '1' : '0')};
+  visibility: ${({ isOpen }) => (isOpen ? 'visible' : 'hidden')};
+  transform: ${({ isOpen }) => isOpen 
+    ? 'translateX(-50%) translateY(0)' 
+    : 'translateX(-50%) translateY(-10px)'};
+  transition: all 0.3s cubic-bezier(0.3, 0, 0.2, 1.2);
 `;
 
 const DropdownItem = styled.div<{ isSelected: boolean }>`
-  padding: 12px 16px;
-  background-color: ${props => props.isSelected ? props.theme.colors.accent : 'white'};
-  color: ${props => props.isSelected ? 'white' : props.theme.colors.text};
+  padding: 14px 20px;
+  background-color: ${props => props.isSelected ? '#4a89dc' : 'white'};
+  color: ${props => props.isSelected ? 'white' : '#333'};
   font-size: 15px;
-  font-weight: ${props => props.isSelected ? '600' : '400'};
+  font-weight: ${props => props.isSelected ? '600' : '500'};
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -61,17 +80,26 @@ const DropdownItem = styled.div<{ isSelected: boolean }>`
   transition: all 0.2s ease;
   
   &:hover {
-    background-color: ${props => props.isSelected ? props.theme.colors.accent : '#f9f9f9'};
+    background-color: ${props => props.isSelected ? '#3a6cad' : '#f5f8ff'};
+    color: ${props => props.isSelected ? 'white' : '#4a89dc'};
   }
   
   &:not(:last-child) {
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f6ff;
   }
 `;
 
 const CheckIcon = styled.i`
   color: white;
   font-size: 14px;
+  opacity: 0.9;
+`;
+
+const GradeLabel = styled.span`
+  font-weight: 500;
+  color: white;
+  margin-left: 5px;
+  transition: all 0.2s ease;
 `;
 
 /**
@@ -124,10 +152,7 @@ const GradeSelectorDropdown: React.FC<GradeSelectorDropdownProps> = ({
   return (
     <DropdownContainer ref={dropdownRef}>
       <DropdownButton onClick={toggleDropdown}>
-        当前学段:
-        <span style={{ fontWeight: 500, color: 'white', marginLeft: '5px' }}>
-          {currentGrade}
-        </span>
+        当前学段: <GradeLabel>{currentGrade}</GradeLabel>
         <ChevronIcon className={`fas fa-chevron-down ${isOpen ? 'open' : ''}`} />
       </DropdownButton>
       

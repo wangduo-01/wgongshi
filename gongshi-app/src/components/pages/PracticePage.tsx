@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 // 样式部分
 const Container = styled.div`
@@ -228,24 +228,53 @@ const SAMPLE_QUESTIONS: Question[] = [
 const PracticePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>(Array(SAMPLE_QUESTIONS.length).fill(-1));
   const [formulaTitle, setFormulaTitle] = useState<string>("体积公式");
+  const [fromPage, setFromPage] = useState<string>('home');
   
   useEffect(() => {
+    // 获取和处理来源页面参数
+    const params = new URLSearchParams(location.search);
+    const from = params.get('from');
+    if (from) {
+      console.log("检测到来源页面参数:", from);
+      setFromPage(from);
+    } else {
+      console.log("未检测到来源参数，使用默认值: home");
+      setFromPage('home');
+    }
+    
     // 可以根据id从API获取公式信息和练习题
     // 这里简化处理，只设置一个标题
     if (id === "3") {
       setFormulaTitle("圆柱体积公式");
     }
-  }, [id]);
+  }, [id, location.search]);
   
   const totalQuestions = SAMPLE_QUESTIONS.length;
   const question = SAMPLE_QUESTIONS[currentQuestion];
   
-  // 处理返回按钮点击 - 返回公式详情页
+  // 处理返回按钮点击 - 根据来源决定返回路径
   const handleBackClick = () => {
-    navigate(`/formula/${id}`);
+    console.log("练习页返回按钮点击，来源页面:", fromPage);
+    
+    // 根据来源页面决定返回地址
+    if (fromPage === 'formula') {
+      // 如果是从公式详情页来的，返回公式详情页
+      console.log("返回公式详情页");
+      navigate(`/formula/${id}`);
+    } else if (fromPage === 'favorites') {
+      // 如果是从收藏弹窗来的，返回首页并设置标记打开收藏弹窗
+      console.log("返回收藏弹窗");
+      sessionStorage.setItem('openFavoritesModalDirectly', 'true');
+      navigate('/'); 
+    } else {
+      // 默认返回首页
+      console.log("返回首页");
+      navigate('/');
+    }
   };
   
   // 处理选择答案
@@ -267,8 +296,9 @@ const PracticePage = () => {
     
     const score = Math.round((correctCount / totalQuestions) * 100);
     
-    // 导航到结果页，并传递分数
-    navigate(`/practice-result/${id}?score=${score}`);
+    // 导航到结果页时传递分数和来源参数
+    console.log(`完成练习，导航到结果页并保留来源: ${fromPage}`);
+    navigate(`/practice-result/${id}?score=${score}&from=${fromPage}`);
   };
   
   // 处理下一题
@@ -276,8 +306,17 @@ const PracticePage = () => {
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(prev => prev + 1);
     } else {
-      // 所有题目已完成，跳转到结果页
-      navigate(`/practice-result/${id}`);
+      // 所有题目已完成，跳转到结果页并传递来源参数
+      const correctCount = selectedAnswers.reduce((count, answer, index) => {
+        if (answer === SAMPLE_QUESTIONS[index].correctAnswer) {
+          return count + 1;
+        }
+        return count;
+      }, 0);
+      
+      const score = Math.round((correctCount / totalQuestions) * 100);
+      console.log(`所有题目已完成，导航到结果页并保留来源: ${fromPage}`);
+      navigate(`/practice-result/${id}?score=${score}&from=${fromPage}`);
     }
   };
   

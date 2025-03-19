@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '../common/Header';
@@ -108,6 +109,8 @@ const FormulaGridContainer = styled.div`
   margin-bottom: 0;
   padding-bottom: 30px;
   border-bottom: none;
+  position: relative;
+  z-index: 10;
 `;
 
 const FormulaGrid = styled.div`
@@ -938,72 +941,289 @@ const FilterContainer = styled.div`
   display: flex;
   align-items: center;
   margin-left: auto;
-  padding-bottom: 15px;
+  // padding-bottom: 15px;
+  padding-right: 16px;
+  position: relative;
+  z-index: 1000;
 `;
 
-const FilterLabel = styled.span`
-  font-size: 14px;
-  color: #666;
-  margin-right: 8px;
+const FilterLabel = styled.div`
   display: flex;
   align-items: center;
+  font-size: 14px;
+  color: #666;
+  margin-right: 12px;
+  font-weight: 500;
   
   i {
-    margin-right: 6px;
-    color: #4285f4;
-    font-size: 15px;
+    margin-right: 8px;
+    color: #4a89dc;
+    font-size: 14px;
   }
 `;
 
 const FilterSelectWrapper = styled.div`
   position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #666;
-    pointer-events: none;
-  }
+  z-index: 20;
 `;
 
 const FilterSelect = styled.select`
   appearance: none;
   background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 8px 30px 8px 12px;
+  border: 1px solid #e8eef7;
+  border-radius: 8px;
+  padding: 8px 35px 8px 14px;
   font-size: 14px;
   color: #333;
   cursor: pointer;
   outline: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
+  font-weight: 500;
   
   &:hover {
-    border-color: #4285f4;
-    box-shadow: 0 1px 4px rgba(66, 133, 244, 0.15);
+    border-color: #c0d6f4;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
   }
   
   &:focus {
-    border-color: #4285f4;
-    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.15);
+    border-color: #4a89dc;
+    box-shadow: 0 3px 12px rgba(74, 137, 220, 0.12);
+  }
+  
+  /* 自定义下拉箭头 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%234a89dc' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  
+  /* 自定义下拉菜单样式 */
+  &::-ms-expand {
+    display: none;
+  }
+  
+  /* 修改下拉菜单方向为向下 */
+  & + select-dropdown {
+    top: 100%;
+    bottom: auto;
+  }
+  
+  /* 自定义下拉菜单样式 */
+  option {
+    padding: 10px 14px;
+    font-weight: 500;
+    background-color: white;
   }
 `;
 
-// TabBar的自定义包装容器
-const TabBarWrapper = styled.div`
+// 添加自定义下拉菜单组件 - 完全重写
+const CustomSelectWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+`;
+
+const SelectButton = styled.div`
+  appearance: none;
+  background-color: #fff;
+  border: 1px solid #e8eef7;
+  border-radius: 8px;
+  padding: 8px 35px 8px 14px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #eee;
+  min-width: 120px;
+  
+  &:hover {
+    border-color: #c0d6f4;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* 自定义下拉箭头 */
+  &:after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%234a89dc' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    display: block;
+    margin-left: 8px;
+  }
 `;
+
+// 修改下拉菜单，将其添加到body最外层以避免嵌套z-index问题
+const DropdownMenuPortal = styled.div`
+  position: fixed;
+  z-index: 9999;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  opacity: 1;
+  visibility: visible;
+`;
+
+const DropdownItem = styled.div<{ isSelected: boolean }>`
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: ${props => props.isSelected ? '600' : '500'};
+  color: ${props => props.isSelected ? '#4a89dc' : '#333'};
+  background-color: ${props => props.isSelected ? '#f5f8ff' : 'white'};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  &:hover {
+    background-color: #f5f8ff;
+    color: #4a89dc;
+  }
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid #f0f6ff;
+  }
+`;
+
+const CheckMark = styled.i`
+  color: #4a89dc;
+  font-size: 12px;
+`;
+
+// 修改第一处TabBarWrapper命名冲突
+const MainTabBarWrapper = styled.div`
+  display: flex;
+  overflow-x: auto;
+  padding: 0 16px;
+  // margin: 12px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: relative;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+// 更新CustomSelect组件的实现，使用createPortal将下拉菜单渲染到body
+const CustomSelect: React.FC<{
+  options: Array<{value: string, label: string}>;
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ options, value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectButtonRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  
+  // 处理下拉菜单切换
+  const toggleDropdown = () => {
+    if (!isOpen) {
+      updateDropdownPosition();
+    }
+    setIsOpen(!isOpen);
+  };
+  
+  // 处理选项点击
+  const handleSelect = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+  
+  // 更新下拉菜单位置
+  const updateDropdownPosition = () => {
+    if (selectButtonRef.current) {
+      const rect = selectButtonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 5,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  };
+  
+  // 点击外部区域关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        selectButtonRef.current && 
+        !selectButtonRef.current.contains(event.target as Node) &&
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    
+    // 窗口大小变化时更新下拉菜单位置
+    const handleResize = () => {
+      if (isOpen) {
+        updateDropdownPosition();
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
+    };
+  }, [isOpen]);
+  
+  // 获取当前选中选项的标签
+  const selectedLabel = options.find(option => option.value === value)?.label || '';
+  
+  // 使用createPortal将下拉菜单渲染到body
+  const renderDropdown = () => {
+    if (!isOpen) return null;
+    
+    return ReactDOM.createPortal(
+      <DropdownMenuPortal 
+        ref={dropdownRef}
+        style={{
+          top: `${dropdownPosition.top}px`,
+          left: `${dropdownPosition.left}px`,
+          width: `${dropdownPosition.width}px`
+        }}
+      >
+        {options.map(option => (
+          <DropdownItem
+            key={option.value}
+            isSelected={option.value === value}
+            onClick={() => handleSelect(option.value)}
+          >
+            {option.label}
+            {option.value === value && (
+              <CheckMark className="fas fa-check" />
+            )}
+          </DropdownItem>
+        ))}
+      </DropdownMenuPortal>,
+      document.body
+    );
+  };
+  
+  return (
+    <CustomSelectWrapper>
+      <SelectButton 
+        ref={selectButtonRef}
+        onClick={toggleDropdown}
+      >
+        {selectedLabel}
+      </SelectButton>
+      {renderDropdown()}
+    </CustomSelectWrapper>
+  );
+};
 
 /**
  * HomePage组件 - 应用首页
@@ -1021,6 +1241,10 @@ const HomePage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // 获取当前路由信息
   const [activeSubject, setActiveSubject] = useState<string>(() => {
+    // 如果是从记录页面跳转过来，使用传递的activeTab
+    if (location.state && (location.state as any).fromPage === 'record') {
+      return (location.state as any).activeTab || 'math';
+    }
     // 从localStorage中获取保存的activeSubject，默认为math
     const savedSubject = localStorage.getItem('activeSubject');
     return savedSubject || 'math';
@@ -1037,11 +1261,11 @@ const HomePage = () => {
     return savedGrade || '初中';
   });
   
-  // 使用localStorage记录最后一次显示弹窗的时间戳
-  // 这样在刷新页面时可以根据时间戳判断是否需要再次显示弹窗
-  const [lastModalShowTime, setLastModalShowTime] = useState(() => {
-    const saved = localStorage.getItem('lastModalShowTime');
-    return saved ? parseInt(saved) : 0;
+  // 修改：按学段分别记录最后弹窗时间
+  // 使用JSON格式存储不同学段的弹窗时间记录
+  const [lastModalShowDates, setLastModalShowDates] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('lastModalShowDates');
+    return saved ? JSON.parse(saved) : {};
   });
   
   // 用于标记是否是页面刷新或直接访问（而不是从内部导航返回）
@@ -1086,12 +1310,17 @@ const HomePage = () => {
   };
 
   // 当前学段可用的学科
-  const availableSubjects = React.useMemo(() => getSubjectsByGrade(currentGrade), [currentGrade]);
+  const availableSubjects = React.useMemo(() => getSubjectsByGrade(currentGrade), [currentGrade, searchResults, showSearchResults, practiceFilter]);
 
   // 查找正确率低于阈值的公式
   const findLowAccuracyFormulas = (threshold: number = 30) => {
     return ALL_FORMULAS
-      .filter(formula => formula.accuracy < threshold && formula.level === currentGrade) // 只筛选当前学段的公式
+      .filter(formula => 
+        // 修改：只筛选练习过且正确率低于阈值的公式（排除accuracy为-1的情况）
+        formula.accuracy >= 0 && 
+        formula.accuracy < threshold && 
+        formula.level === currentGrade
+      )
       .sort((a, b) => {
         // 如果有lastPracticed属性，按最近练习时间排序（降序）
         if (a.lastPracticed && b.lastPracticed) {
@@ -1106,27 +1335,44 @@ const HomePage = () => {
   };
 
   // 检查是否需要显示弹窗
-  // 只在直接访问首页（刷新或从URL直接进入）且一天内未显示过时显示
+  // 只在直接访问首页（刷新或从URL直接进入）且当天未显示过该学段的弹窗时显示
   const shouldShowModal = () => {
     // 如果不是直接访问（是从内部导航返回），不显示弹窗
     if (!isDirectAccess.current) {
+      console.log("不是直接访问，不显示巩固建议弹窗");
       return false;
     }
     
-    const now = Date.now();
-    // 24小时内只显示一次弹窗
-    const oneDayMs = 24 * 60 * 60 * 1000;
+    // 获取当前日期字符串（YYYY-MM-DD格式，用于按自然日比较）
+    const today = new Date().toISOString().split('T')[0];
     
-    // 恢复时间检查逻辑，确保24小时内只显示一次
-    return (now - lastModalShowTime) > oneDayMs;
-    // return true; // 测试用，直接返回true
+    // 检查当前学段今天是否已经显示过弹窗
+    const lastShownForGrade = lastModalShowDates[currentGrade];
+    
+    console.log(`检查是否显示${currentGrade}学段的巩固建议弹窗`, 
+                `今天是: ${today}`, 
+                `上次显示是: ${lastShownForGrade || '从未显示'}`);
+    
+    // 如果当前学段今天没有显示过弹窗，则显示
+    return !lastShownForGrade || lastShownForGrade !== today;
   };
 
   // 设置弹窗已显示
   const markModalAsShown = () => {
-    const now = Date.now();
-    localStorage.setItem('lastModalShowTime', now.toString());
-    setLastModalShowTime(now);
+    // 获取当前日期字符串（YYYY-MM-DD格式）
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 更新当前学段的显示记录
+    const newShowDates = {
+      ...lastModalShowDates,
+      [currentGrade]: today
+    };
+    
+    // 保存到localStorage
+    localStorage.setItem('lastModalShowDates', JSON.stringify(newShowDates));
+    setLastModalShowDates(newShowDates);
+    
+    console.log(`已记录${currentGrade}学段在${today}显示过巩固建议弹窗`);
   };
 
   // 强制将所有公式的ID转为字符串
@@ -1212,10 +1458,59 @@ const HomePage = () => {
     });
   };
   
-  // 在组件挂载和路由变化时同步收藏状态
+  // 从localStorage同步练习状态
+  const syncPracticeDataFromStorage = () => {
+    ALL_FORMULAS.forEach(formula => {
+      // 读取最近练习时间
+      const lastPracticedValue = localStorage.getItem(`formula_lastPracticed_${formula.id}`);
+      if (lastPracticedValue) {
+        try {
+          formula.lastPracticed = new Date(lastPracticedValue);
+          console.log(`公式"${formula.title}"的最近练习时间已更新:`, formula.lastPracticed);
+        } catch (e) {
+          console.error(`解析公式${formula.id}的练习时间失败:`, e);
+        }
+      }
+      
+      // 读取准确率
+      const accuracyValue = localStorage.getItem(`formula_accuracy_${formula.id}`);
+      if (accuracyValue) {
+        try {
+          formula.accuracy = parseInt(accuracyValue, 10);
+          console.log(`公式"${formula.title}"的准确率已更新:`, formula.accuracy);
+        } catch (e) {
+          console.error(`解析公式${formula.id}的准确率失败:`, e);
+        }
+      }
+    });
+    
+    // 检查是否有最新练习数据
+    const lastPracticedFormulaData = localStorage.getItem('lastPracticedFormulaData');
+    if (lastPracticedFormulaData) {
+      try {
+        const { id, lastPracticed, accuracy } = JSON.parse(lastPracticedFormulaData);
+        
+        // 查找并更新对应公式
+        const formula = ALL_FORMULAS.find(f => f.id === id);
+        if (formula) {
+          console.log(`更新最近练习的公式"${formula.title}"`);
+          formula.lastPracticed = new Date(lastPracticed);
+          formula.accuracy = accuracy;
+        }
+        
+        // 清除临时存储的数据
+        localStorage.removeItem('lastPracticedFormulaData');
+      } catch (e) {
+        console.error('解析最近练习公式数据失败:', e);
+      }
+    }
+  };
+  
+  // 在组件挂载和路由变化时同步收藏状态和练习状态
   useEffect(() => {
     syncFavoritesFromStorage();
-  }, [location.pathname]); // 当路由变化时，重新同步收藏状态
+    syncPracticeDataFromStorage();
+  }, [location.pathname]); // 当路由变化时，重新同步状态
   
   // 处理公式卡片点击
   const handleFormulaClick = (formula: Formula) => {
@@ -1291,12 +1586,13 @@ const HomePage = () => {
     }
   };
 
-  // 处理练习点击
+  // 处理练习按钮点击
   const handlePracticeClick = (formula: Formula) => {
-    // 移除弹窗显示逻辑，只在点击练习按钮时直接导航到练习页面
-    navigate(`/practice/${formula.id}`, { 
-      state: { source: 'homepage' } 
-    });
+    console.log("首页点击练习按钮:", formula.title, "准确率:", formula.accuracy);
+    
+    // 直接导航到练习页面，不再弹出提示
+    // 用户主动点击练习按钮时，应该直接进入练习页面，不管准确率如何
+    navigate(`/practice/${formula.id}?from=home`);
   };
 
   // 处理标签切换，并保存到localStorage
@@ -1312,14 +1608,23 @@ const HomePage = () => {
     
     // 如果学段已更改，更新状态
     if (updatedGrade !== currentGrade) {
+      console.log(`学段从${currentGrade}切换到${updatedGrade}`);
       setCurrentGrade(updatedGrade);
       
-      // 学段切换后，检查新学段是否有低准确率公式
-      // 只有在直接访问首页的情况下才显示弹窗
-      if (isDirectAccess.current) {
+      // 获取当前日期，用于检查新学段今天是否已显示过弹窗
+      const today = new Date().toISOString().split('T')[0];
+      const hasShownToday = lastModalShowDates[updatedGrade] === today;
+      
+      console.log(`新学段${updatedGrade}今天${hasShownToday ? '已经' : '尚未'}显示过弹窗`);
+      
+      // 只有当新学段今天未显示过弹窗，且有低准确率公式时才显示
+      if (!hasShownToday) {
+        // 获取新学段中练习过且准确率较低的公式（排除未练习公式）
         const lowAccuracyFormulasInNewGrade = ALL_FORMULAS.filter(
-          formula => formula.accuracy < 30 && formula.level === updatedGrade
+          formula => formula.accuracy >= 0 && formula.accuracy < 30 && formula.level === updatedGrade
         );
+        
+        console.log(`找到${lowAccuracyFormulasInNewGrade.length}个准确率低于30%的公式`);
         
         if (lowAccuracyFormulasInNewGrade.length > 0) {
           // 找出新学段中准确率最低的公式，或最近练习过的
@@ -1331,6 +1636,8 @@ const HomePage = () => {
             if (b.lastPracticed) return 1;
             return a.accuracy - b.accuracy;
           })[0];
+          
+          console.log(`选择显示公式: ${selectedFormula.title}，准确率: ${selectedFormula.accuracy}`);
           
           setSelectedFormula(selectedFormula);
           setShowLowAccuracyModal(true);
@@ -1506,9 +1813,16 @@ const HomePage = () => {
   // 修改TabBar标签文本，显示搜索结果数量和筛选后的公式数量
   const getTabLabel = (subjectId: string) => {
     if (showSearchResults) {
-      // 计算当前搜索结果中每个学科的数量
+      // 计算当前搜索结果中每个学科的数量，确保结果非负数
       const subjectResults = searchResults.filter(f => f.subject === subjectId);
-      return `${subjectId === 'math' ? '数学' : subjectId === 'physics' ? '物理' : '化学'} (${subjectResults.length})`;
+      // 进一步应用练习状态筛选
+      const filteredResults = subjectResults.filter(f => {
+        if (practiceFilter === 'all') return true;
+        if (practiceFilter === 'practiced') return f.accuracy > 0;
+        if (practiceFilter === 'unpracticed') return f.accuracy <= 0;
+        return true;
+      });
+      return `${subjectId === 'math' ? '数学' : subjectId === 'physics' ? '物理' : '化学'} (${filteredResults.length})`;
     }
     
     // 筛选条件下的公式数量
@@ -1554,6 +1868,25 @@ const HomePage = () => {
     setPracticeFilter(e.target.value);
   };
 
+  // 添加一个effect，确保标签文本在搜索和筛选条件变化时更新
+  useEffect(() => {
+    // 仅触发更新，不做实际操作
+    console.log("搜索或筛选条件变化，更新标签显示");
+  }, [searchQuery, searchResults, showSearchResults, practiceFilter]);
+
+  // 处理从其他页面传递过来的状态
+  useEffect(() => {
+    // 检查是否从记录页面跳转过来
+    if (location.state && (location.state as any).fromPage === 'record') {
+      const targetTab = (location.state as any).activeTab;
+      if (targetTab && ['math', 'physics', 'chemistry'].includes(targetTab)) {
+        setActiveSubject(targetTab);
+        // 清除状态，防止刷新页面时重复处理
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location]);
+
   return (
     <HomeContainer>
       <PageHeader>
@@ -1590,6 +1923,8 @@ const HomePage = () => {
                   setSearchQuery(''); 
                   setSearchResults([]);
                   setShowSearchResults(false);
+                  // 强制更新标签文本
+                  setActiveSubject(prev => prev);
                 }}>
                   <i className="fas fa-times"></i>
                 </ClearButton>
@@ -1628,7 +1963,7 @@ const HomePage = () => {
       )}
 
       {/* 使用TabBarWrapper替换之前的TabBarWithFilterContainer */}
-      <TabBarWrapper>
+      <MainTabBarWrapper>
         <TabBar 
           tabs={availableSubjects.map(subject => ({
             ...subject,
@@ -1636,6 +1971,7 @@ const HomePage = () => {
           }))}
           activeTab={activeSubject}
           onTabChange={handleTabChange}
+          key={`tabbar-${searchQuery}-${practiceFilter}`} // 添加key强制组件在搜索或筛选条件变化时重新渲染
         />
         
         <FilterContainer>
@@ -1643,52 +1979,73 @@ const HomePage = () => {
             <i className="fas fa-filter"></i>
             学习状态
           </FilterLabel>
-          <FilterSelectWrapper>
-            <FilterSelect value={practiceFilter} onChange={handleFilterChange}>
-              <option value="all">全部公式</option>
-              <option value="practiced">已练习公式</option>
-              <option value="unpracticed">未练习公式</option>
-            </FilterSelect>
-          </FilterSelectWrapper>
+          <CustomSelect
+            options={[
+              { value: 'all', label: '全部公式' },
+              { value: 'practiced', label: '已练习公式' },
+              { value: 'unpracticed', label: '未练习公式' }
+            ]}
+            value={practiceFilter}
+            onChange={(value) => setPracticeFilter(value)}
+          />
         </FilterContainer>
-      </TabBarWrapper>
+      </MainTabBarWrapper>
 
       <FormulaGridContainer>
         <FormulaGrid>
           {/* 根据是否在搜索状态显示不同的公式列表 */}
           {showSearchResults ? (
-            searchResults.filter(formula => formula.subject === activeSubject).length > 0 ? (
-              searchResults.filter(formula => formula.subject === activeSubject).map(formula => {
-                formula.id = String(formula.id);
-                const isLastPracticed = !!getLastPracticedFormula && formula.id === getLastPracticedFormula.id;
+            (() => {
+              // 先应用学科筛选
+              const subjectFiltered = searchResults.filter(formula => formula.subject === activeSubject);
+              
+              // 再应用练习状态筛选
+              const filteredResults = subjectFiltered.filter(formula => {
+                if (practiceFilter === 'all') return true;
+                if (practiceFilter === 'practiced') return formula.accuracy > 0;
+                if (practiceFilter === 'unpracticed') return formula.accuracy <= 0;
+                return true;
+              });
+              
+              if (filteredResults.length > 0) {
+                return filteredResults.map(formula => {
+                  formula.id = String(formula.id);
+                  const isLastPracticed = !!getLastPracticedFormula && formula.id === getLastPracticedFormula.id;
+                  return (
+                    <FormulaCard
+                      key={formula.id}
+                      title={formula.title}
+                      content={formula.content}
+                      accuracy={formula.accuracy}
+                      isFavorite={formula.isFavorite}
+                      isLastPracticed={isLastPracticed}
+                      searchQuery={searchQuery}
+                      onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
+                      onPracticeClick={() => handlePracticeClick(formula)}
+                      onClick={() => handleFormulaClick(formula)}
+                    />
+                  );
+                });
+              } else {
                 return (
-                  <FormulaCard
-                    key={formula.id}
-                    title={formula.title}
-                    content={formula.content}
-                    accuracy={formula.accuracy}
-                    isFavorite={formula.isFavorite}
-                    isLastPracticed={isLastPracticed}
-                    searchQuery={searchQuery}
-                    onFavoriteToggle={() => handleFavoriteToggle(formula.id)}
-                    onPracticeClick={() => handlePracticeClick(formula)}
-                    onClick={() => handleFormulaClick(formula)}
-                  />
+                  <NoResultsMessage>
+                    <i className="fas fa-search"></i>
+                    <div>
+                      <p>当前筛选条件下未找到与"{searchQuery}"相关的{activeSubject === 'math' ? '数学' : activeSubject === 'physics' ? '物理' : '化学'}公式</p>
+                      {practiceFilter !== 'all' ? (
+                        <p className="suggestion">尝试更改筛选条件或搜索其他关键词</p>
+                      ) : (
+                        searchResults.length > 0 ? (
+                          <p className="suggestion">已在其他学科找到匹配结果，请点击上方对应标签查看</p>
+                        ) : (
+                          <p className="suggestion">可尝试其他关键词或切换学科查找</p>
+                        )
+                      )}
+                    </div>
+                  </NoResultsMessage>
                 );
-              })
-            ) : (
-              <NoResultsMessage>
-                <i className="fas fa-search"></i>
-                <div>
-                  <p>当前学科中未找到与"{searchQuery}"相关的{activeSubject === 'math' ? '数学' : activeSubject === 'physics' ? '物理' : '化学'}公式</p>
-                  {searchResults.length > 0 ? (
-                    <p className="suggestion">已在其他学科找到匹配结果，请点击上方对应标签查看</p>
-                  ) : (
-                    <p className="suggestion">可尝试其他关键词或切换学科查找</p>
-                  )}
-                </div>
-              </NoResultsMessage>
-            )
+              }
+            })()
           ) : (
             (() => {
               const filteredList = formulas.filter(formula => {
@@ -1738,13 +2095,15 @@ const HomePage = () => {
         isOpen={showLowAccuracyModal}
         onClose={() => setShowLowAccuracyModal(false)}
         title="巩固建议"
-        content={`您对"${selectedFormula?.title || ''}"的掌握度较低，通过短时间练习可以快速提高掌握程度哦！`}
+        content={selectedFormula ? `您对"${selectedFormula.title}"的掌握度较低(${selectedFormula.accuracy}%)，通过短时间练习可以快速提高掌握程度哦！` : ''}
         primaryAction={{
           text: "立即练习",
           onClick: () => {
             setShowLowAccuracyModal(false);
             if (selectedFormula) {
-              navigate(`/practice/${selectedFormula.id}`);
+              // 导航到练习页面，添加来源参数
+              console.log(`从巩固建议弹窗点击练习公式: ${selectedFormula.title}`);
+              navigate(`/practice/${selectedFormula.id}?from=home`);
             }
           }
         }}
@@ -1764,12 +2123,19 @@ const HomePage = () => {
         onClose={() => setShowFavoritesModal(false)}
         favoriteFormulas={ALL_FORMULAS.filter(f => f.isFavorite)}
         onFavoriteToggle={handleFavoriteToggle}
-        onPracticeClick={handlePracticeClick}
+        onPracticeClick={(formula) => {
+          console.log("从收藏弹窗点击练习按钮:", formula.title);
+          setShowFavoritesModal(false);
+          // 导航到练习页面，添加来源为favorites的参数
+          navigate(`/practice/${formula.id}?from=favorites`);
+        }}
         onFormulaClick={(formula) => {
           setShowFavoritesModal(false);
           sessionStorage.setItem('fromFavoritesModal', 'true');
           sessionStorage.removeItem('fromFormulaDetail');
-          handleFormulaClick(formula);
+          // 直接导航到公式详情页并添加from=favorites参数
+          console.log(`从收藏弹窗导航到公式 ID: ${formula.id}，添加from=favorites参数`);
+          navigate(`/formula/${formula.id}?from=favorites`);
         }}
         onPrintClick={() => {}}
       />
@@ -1800,4 +2166,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage; 
+export default HomePage;

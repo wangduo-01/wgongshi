@@ -256,21 +256,75 @@ const PracticeResultPage = () => {
   const location = useLocation();
   const [score, setScore] = useState(0);
   const [formulaTitle, setFormulaTitle] = useState("体积公式");
+  const [fromPage, setFromPage] = useState<string>('home');
 
-  // 从URL参数中获取分数
+  // 从URL参数和location.state中获取分数和来源页面
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const scoreParam = searchParams.get('score');
     if (scoreParam) {
       setScore(parseInt(scoreParam, 10));
     }
+    
+    // 优先从location.state获取来源页面信息
+    if (location.state && (location.state as any).fromPage) {
+      console.log("从state中检测到来源页面:", (location.state as any).fromPage);
+      setFromPage((location.state as any).fromPage);
+    } else {
+      // 如果state中没有，再从URL参数中获取
+      const from = searchParams.get('from');
+      if (from) {
+        console.log("从URL参数中检测到来源页面:", from);
+        setFromPage(from);
+      } else {
+        console.log("未检测到来源参数，使用默认值: home");
+        setFromPage('home');
+      }
+    }
 
     // 可以根据id从API获取公式信息
     // 这里简化处理，只设置一个标题
     if (id === "3") {
       setFormulaTitle("圆柱体积公式");
+    } else if (id === "4") {
+      setFormulaTitle("勾股定理");
     }
-  }, [location.search, id]);
+    
+    // 更新公式的lastPracticed属性和accuracy值
+    if (id) {
+      console.log(`更新公式ID:${id}的练习记录，准确率:${scoreParam}%`);
+      
+      // 在实际项目中，这里应该调用API更新服务器上的数据
+      // 这里仅在本地存储中更新
+      
+      // 1. 为当前公式设置lastPracticed为当前时间
+      const formulaLastPracticedKey = `formula_lastPracticed_${id}`;
+      localStorage.setItem(formulaLastPracticedKey, new Date().toISOString());
+      
+      // 2. 更新公式准确率
+      if (scoreParam) {
+        const formulaAccuracyKey = `formula_accuracy_${id}`;
+        localStorage.setItem(formulaAccuracyKey, scoreParam);
+      }
+      
+      // 3. 尝试更新ALL_FORMULAS数组中的对应公式（在下次回到首页时会被读取）
+      try {
+        // 获取公式元数据
+        const formulaMetadata = {
+          id,
+          lastPracticed: new Date(),
+          accuracy: parseInt(scoreParam || "0", 10)
+        };
+        
+        // 保存到localStorage，以便HomePage可以读取
+        localStorage.setItem('lastPracticedFormulaData', JSON.stringify(formulaMetadata));
+        
+        console.log(`已保存公式练习记录:`, formulaMetadata);
+      } catch (error) {
+        console.error('保存公式练习记录时出错:', error);
+      }
+    }
+  }, [location.search, location.state, id]);
   
   // 根据分数获取消息
   const getResultMessage = () => {
@@ -295,14 +349,34 @@ const PracticeResultPage = () => {
   const correctAnswers = Math.round((score / 100) * totalQuestions);
   const wrongAnswers = totalQuestions - correctAnswers;
   
-  // 处理返回公式页面
+  // 处理返回公式页面，根据来源决定行为
   const handleBackToFormula = () => {
-    navigate(`/formula/${id}`);
+    console.log("结果页返回按钮点击，来源页面:", fromPage);
+    
+    if (fromPage === 'formula') {
+      // 如果是从公式详情页来的，返回公式详情页
+      console.log("从公式详情页来，返回到公式详情页");
+      navigate(`/formula/${id}?from=${fromPage}`);
+    } else if (fromPage === 'favorites') {
+      // 如果是从收藏弹窗来的，返回首页并设置标记打开收藏弹窗
+      console.log("从收藏弹窗来，返回首页并设置标记");
+      sessionStorage.setItem('openFavoritesModalDirectly', 'true');
+      navigate('/');
+    } else if (fromPage === 'record') {
+      // 如果是从记录页面来的，返回记录页面
+      console.log("从记录页面来，返回到记录页面");
+      navigate('/record');
+    } else {
+      // 默认返回首页
+      console.log("从其他页面来，返回首页");
+      navigate('/');
+    }
   };
   
-  // 处理再次练习
+  // 处理再次练习，保留来源页面信息
   const handlePracticeAgain = () => {
-    navigate(`/practice/${id}`);
+    console.log("点击再次练习按钮，保留来源:", fromPage);
+    navigate(`/practice/${id}?from=${fromPage}`);
   };
   
   // 显示一些庆祝效果（高分时）

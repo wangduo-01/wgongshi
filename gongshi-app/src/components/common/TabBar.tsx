@@ -14,9 +14,9 @@ interface TabBarProps {
 // 样式化组件
 const TabBarContainer = styled.div`
   display: flex;
-  border-bottom: 1px solid #eee;
-  // margin-bottom: 20px;
+  position: relative;
   overflow-x: auto;
+  padding-bottom: 2px;
   
   &::-webkit-scrollbar {
     display: none;
@@ -24,6 +24,16 @@ const TabBarContainer = styled.div`
   
   -ms-overflow-style: none;
   scrollbar-width: none;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #eaedf2;
+  }
 `;
 
 interface TabProps {
@@ -31,23 +41,34 @@ interface TabProps {
 }
 
 const Tab = styled.div<TabProps>`
-  padding: 25px 25px;
+  padding: 18px 25px;
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
-  font-size: 18px;
-  color: ${props => props.isActive ? props.theme.colors.primary : '#666'};
-  font-weight: ${props => props.isActive ? '600' : '400'};
+  font-size: 16px;
+  color: ${props => props.isActive ? '#4a89dc' : '#666'};
+  font-weight: ${props => props.isActive ? '600' : '500'};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: ${props => props.isActive ? '#4a89dc' : '#444'};
+  }
   
   &:after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: ${props => props.isActive ? '70%' : '0'};
     height: 3px;
-    background-color: ${props => props.isActive ? props.theme.colors.primary : 'transparent'};
-    transition: background-color 0.2s;
+    border-radius: 3px;
+    background-color: ${props => props.isActive ? '#4a89dc' : 'transparent'};
+    transition: all 0.25s ease;
+  }
+  
+  &:hover:after {
+    width: ${props => props.isActive ? '80%' : '0'};
   }
 `;
 

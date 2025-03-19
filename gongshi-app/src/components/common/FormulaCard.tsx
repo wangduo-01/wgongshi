@@ -1,5 +1,6 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
+import FormulaVisualization from './FormulaVisualization';
 
 interface FormulaCardProps {
   title: string;
@@ -31,6 +32,15 @@ const Card = styled.div`
   }
 `;
 
+// 使内容在背景之上显示
+const ContentWrapper = styled.div`
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+`;
+
 const TitleContainer = styled.div`
   display: flex;
   align-items: center;
@@ -43,6 +53,8 @@ const TitleGroup = styled.div`
   align-items: center;
   gap: 10px;
   flex: 1;
+  flex-wrap: nowrap;
+  overflow: hidden;
 `;
 
 const Title = styled.div`
@@ -52,6 +64,10 @@ const Title = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
 `;
 
 const Content = styled.div`
@@ -71,7 +87,7 @@ const Content = styled.div`
 `;
 
 const MultiLineContent = styled.div`
-  font-size: 26px;
+  font-size: 24px;
   color: #000;
   text-align: center;
   padding: 0;
@@ -153,13 +169,41 @@ const StarButton = styled(ActionButton) <{ active: boolean }>`
 
 // 上次练习标签组件
 const LastPracticedBadge = styled.div`
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 500;
-  background-color: rgba(74, 137, 220, 0.15);
-  color: #4a89dc;
-  border: 1px solid rgba(74, 137, 220, 0.2);
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background-color: #4a89dc;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 4px rgba(74, 137, 220, 0.3);
+  animation: pulse 2s infinite;
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 2px 4px rgba(74, 137, 220, 0.3);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 3px 6px rgba(74, 137, 220, 0.4);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 2px 4px rgba(74, 137, 220, 0.3);
+    }
+  }
+
+  &::before {
+    content: '⏱';
+    font-size: 14px;
+    margin-right: 2px;
+  }
 `;
 
 // 恢复AccuracyBadgeProps接口
@@ -173,6 +217,8 @@ const AccuracyBadge = styled.span<AccuracyBadgeProps>`
   font-weight: 400;
   padding: 2px 8px;
   border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
   background-color: ${props => {
     if (props.accuracy >= 80) return 'rgba(76, 217, 100, 0.15)';
     if (props.accuracy >= 50) return 'rgba(255, 149, 0, 0.15)';
@@ -194,6 +240,41 @@ const AccuracyBadge = styled.span<AccuracyBadgeProps>`
 const HighlightedText = styled.span`
   color: #e53935;
   font-weight: 500;
+`;
+
+// 为FormulaVisualization添加样式
+const StyledFormulaVisualization = styled(FormulaVisualization)`
+  position: absolute;
+  top: 10px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0.75) 25%,
+      rgba(255, 255, 255, 0.65) 50%,
+      rgba(255, 255, 255, 0.75) 75%,
+      rgba(255, 255, 255, 0.85) 100%
+    );
+    pointer-events: none;
+  }
+  
+  ${Card}:hover & {
+    opacity: 0.7;
+  }
 `;
 
 const FormulaCard: React.FC<FormulaCardProps> = ({
@@ -233,37 +314,64 @@ const FormulaCard: React.FC<FormulaCardProps> = ({
     });
   };
 
+  // 根据可用空间动态截断标题
+  const getTruncatedTitle = (text: string): string => {
+    // 计算标题最大长度
+    let maxLength = 8; // 默认情况下的最大长度
+    
+    // 根据标签数量调整标题长度
+    if (accuracy > 0 && isLastPracticed) {
+      // 如果同时有正确率和上次练习标签，标题长度最多5个字
+      maxLength = 5;
+    } else if (accuracy > 0 || isLastPracticed) {
+      // 如果只有一个标签，标题长度最多6个字
+      maxLength = 6;
+    }
+    
+    // 检查标题是否需要截断
+    if (text.length <= maxLength) {
+      return text; // 标题足够短，不需要截断
+    }
+    
+    // 需要截断
+    return text.substring(0, maxLength) + '...';
+  };
+
   return (
-    <Card onClick={handleCardClick}>
-      <TitleContainer>
-        <TitleGroup>
-          <Title>
-            {highlightSearchQuery(title)}
+    <Card onClick={handleCardClick} className="formula-card">
+      <StyledFormulaVisualization formulaTitle={title} />
+      
+      <ContentWrapper>
+        <TitleContainer>
+          <TitleGroup>
+            <Title title={title}>
+              {highlightSearchQuery(getTruncatedTitle(title))}
+            </Title>
+            {isLastPracticed && (
+              <LastPracticedBadge>上次练习</LastPracticedBadge>
+            )}
             {accuracy > 0 && (
               <AccuracyBadge accuracy={accuracy}>正确率：{accuracy}%</AccuracyBadge>
             )}
-          </Title>
-          {isLastPracticed && (
-            <LastPracticedBadge>上次练习</LastPracticedBadge>
-          )}
-        </TitleGroup>
-        <StarButton
-          active={isFavorite}
-          onClick={(e) => handleActionClick(e, onFavoriteToggle)}
-        >
-          <i className={isFavorite ? 'fas fa-star' : 'far fa-star'} />
-        </StarButton>
-      </TitleContainer>
-      
-      <MultiLineContent title={content}>
-        <div>{highlightSearchQuery(content)}</div>
-      </MultiLineContent>
-      
-      <CardFooter>
-        <ActionButton onClick={(e) => handleActionClick(e, onPracticeClick)}>
-          <span style={{ color: '#4a89dc', fontSize: '16px' }}>练一练</span>
-        </ActionButton>
-      </CardFooter>
+          </TitleGroup>
+          <StarButton
+            active={isFavorite}
+            onClick={(e) => handleActionClick(e, onFavoriteToggle)}
+          >
+            <i className={isFavorite ? 'fas fa-star' : 'far fa-star'} />
+          </StarButton>
+        </TitleContainer>
+        
+        <MultiLineContent title={content}>
+          <div>{highlightSearchQuery(content)}</div>
+        </MultiLineContent>
+        
+        <CardFooter>
+          <ActionButton onClick={(e) => handleActionClick(e, onPracticeClick)}>
+            <span style={{ color: '#4a89dc', fontSize: '16px' }}>练一练</span>
+          </ActionButton>
+        </CardFooter>
+      </ContentWrapper>
     </Card>
   );
 };
