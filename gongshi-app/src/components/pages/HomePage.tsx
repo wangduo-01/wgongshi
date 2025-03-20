@@ -213,6 +213,13 @@ interface Formula {
   favoriteTimestamp?: number; // 添加收藏时间戳
 }
 
+// 添加收藏项目的接口定义
+interface FavoriteItem {
+  id: string;
+  title: string;
+  timestamp?: number;
+}
+
 // 扩展模拟公式数据，特别是增加初中数学公式
 const ALL_FORMULAS: Formula[] = [
   // 数学公式
@@ -1239,7 +1246,29 @@ const CustomSelect: React.FC<{
  */
 const HomePage = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // 获取当前路由信息
+  const location = useLocation();
+  
+  // 从路由状态中获取是否需要显示收藏弹窗的标记
+  const initialShowFavoritesModal = location.state?.showFavoritesModal || 
+                                   location.pathname === '/favorites' ||
+                                   sessionStorage.getItem('openFavoritesModalDirectly') === 'true';
+  
+  // 如果是从sessionStorage获取的标记，立即清除
+  if (sessionStorage.getItem('openFavoritesModalDirectly') === 'true') {
+    sessionStorage.removeItem('openFavoritesModalDirectly');
+  }
+  
+  // 如果是从路径获取的标记，修改URL
+  if (location.pathname === '/favorites') {
+    window.history.replaceState({}, document.title, '/');
+  }
+  
+  // 处理返回按钮点击
+  const handleBack = () => {
+    navigate('/');
+  };
+  
+  // 科目分类标签
   const [activeSubject, setActiveSubject] = useState<string>(() => {
     // 如果是从记录页面跳转过来，使用传递的activeTab
     if (location.state && (location.state as any).fromPage === 'record') {
@@ -1249,20 +1278,30 @@ const HomePage = () => {
     const savedSubject = localStorage.getItem('activeSubject');
     return savedSubject || 'math';
   });
-  const [formulas, setFormulas] = useState<Formula[]>([]);
-  const [showLowAccuracyModal, setShowLowAccuracyModal] = useState(false);
-  const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
-  // 添加收藏弹窗状态
-  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   
-  // 从localStorage中获取保存的学段，默认为初中
+  // 更改科目年级选择的状态
   const [currentGrade, setCurrentGrade] = useState<string>(() => {
     const savedGrade = localStorage.getItem('currentGrade');
     return savedGrade || '初中';
   });
   
-  // 修改：按学段分别记录最后弹窗时间
-  // 使用JSON格式存储不同学段的弹窗时间记录
+  const [showGradeSelectorModal, setShowGradeSelectorModal] = useState<boolean>(false);
+  const [showLowAccuracyReminder, setShowLowAccuracyReminder] = useState<boolean>(false);
+  const [selectedFormula, setSelectedFormula] = useState<Formula | null>(null);
+  
+  // 搜索状态
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [showSearchHistory, setShowSearchHistory] = useState<boolean>(false);
+  const [searchResults, setSearchResults] = useState<Formula[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
+  const [formulas, setFormulas] = useState<Formula[]>([]);
+  
+  // 添加收藏弹窗状态
+  const [showFavoritesModal, setShowFavoritesModal] = useState<boolean>(initialShowFavoritesModal);
+  
+  // 从localStorage中获取保存的学段，默认为初中
   const [lastModalShowDates, setLastModalShowDates] = useState<Record<string, string>>(() => {
     const saved = localStorage.getItem('lastModalShowDates');
     return saved ? JSON.parse(saved) : {};
@@ -1278,13 +1317,6 @@ const HomePage = () => {
 
   // 添加搜索弹窗状态
   const [showSearchModal, setShowSearchModal] = useState(false);
-  const [searchResults, setSearchResults] = useState<Formula[]>([]);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-
-  // 添加搜索状态
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [filteredFormulas, setFilteredFormulas] = useState<Formula[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1312,26 +1344,18 @@ const HomePage = () => {
   // 当前学段可用的学科
   const availableSubjects = React.useMemo(() => getSubjectsByGrade(currentGrade), [currentGrade, searchResults, showSearchResults, practiceFilter]);
 
-  // 查找正确率低于阈值的公式
+  // 查找低掌握度的公式
   const findLowAccuracyFormulas = (threshold: number = 30) => {
-    return ALL_FORMULAS
-      .filter(formula => 
-        // 修改：只筛选练习过且正确率低于阈值的公式（排除accuracy为-1的情况）
-        formula.accuracy >= 0 && 
-        formula.accuracy < threshold && 
-        formula.level === currentGrade
-      )
-      .sort((a, b) => {
-        // 如果有lastPracticed属性，按最近练习时间排序（降序）
-        if (a.lastPracticed && b.lastPracticed) {
-          return b.lastPracticed.getTime() - a.lastPracticed.getTime();
-        }
-        // 如果只有一个有lastPracticed属性，将其排在前面
-        if (a.lastPracticed) return -1;
-        if (b.lastPracticed) return 1;
-        // 如果都没有lastPracticed属性，按正确率排序（升序）
-        return a.accuracy - b.accuracy;
-      });
+    // 筛选出准确率低于阈值且最近有练习的公式
+    return ALL_FORMULAS.filter(formula => {
+      return formula.lastPracticed && // 只考虑有练习记录的公式
+        formula.accuracy > 0 && // 已经有准确率数据
+        formula.accuracy < threshold && // 准确率低于阈值
+        formula.level === currentGrade; // 匹配当前学段
+    }).sort((a, b) => {
+      // 按最近练习时间排序，最近练习的排前面
+      return (b.lastPracticed?.getTime() || 0) - (a.lastPracticed?.getTime() || 0);
+    });
   };
 
   // 检查是否需要显示弹窗
@@ -1393,7 +1417,7 @@ const HomePage = () => {
       if (lowAccuracyFormulas.length > 0) {
         // 选择排在最前面的公式（最近练习且正确率低的）
         setSelectedFormula(lowAccuracyFormulas[0]);
-        setShowLowAccuracyModal(true);
+        setShowLowAccuracyReminder(true);
         // 记录已显示弹窗
         markModalAsShown();
       }
@@ -1430,7 +1454,7 @@ const HomePage = () => {
       formula.subject === subjectToUse && formula.level === currentGrade
     );
     
-    setFormulas(filteredFormulas);
+    setFilteredFormulas(filteredFormulas);
     
     // 如果当前学科不可用，自动切换到数学
     if (!isSubjectAvailable && activeSubject !== 'math') {
@@ -1556,32 +1580,23 @@ const HomePage = () => {
       f.id === id ? { ...f, isFavorite: newIsFavorite, favoriteTimestamp: newIsFavorite ? timestamp : undefined } : f
     ));
     
-    // 同时更新ALL_FORMULAS中的收藏状态，确保在切换标签页或学段时状态一致
-    const formulaIndex = ALL_FORMULAS.findIndex(f => f.id === id);
-    if (formulaIndex !== -1) {
-      ALL_FORMULAS[formulaIndex].isFavorite = newIsFavorite;
-      ALL_FORMULAS[formulaIndex].favoriteTimestamp = newIsFavorite ? timestamp : undefined;
-    }
-    
-    // 保存到localStorage，确保在公式详情页和首页之间共享状态
-    // 存储为JSON对象，包含是否收藏和收藏时间
-    localStorage.setItem(
-      `formula_favorite_${id}`, 
-      JSON.stringify({ 
-        isFavorite: newIsFavorite, 
-        timestamp: newIsFavorite ? timestamp : null 
-      })
-    );
-    
-    // 显示Toast提示
+    // 更新我们的localStorage中的收藏数据
     if (newIsFavorite) {
-      showToastMessage(`已将「${formula.title}」添加到您的收藏中`, 'fas fa-star');
+      // 添加到收藏
+      const favorites: FavoriteItem[] = JSON.parse(localStorage.getItem('favorites') || '[]');
+      favorites.push({
+        id,
+        title: formula.title,
+        timestamp
+      });
+      localStorage.setItem('favorites', JSON.stringify(favorites));
     } else {
-      showToastMessage(`已将「${formula.title}」从收藏中移除`, 'far fa-star');
-      
-      // 如果当前在收藏弹窗中，且没有收藏的公式了，可以自动关闭弹窗
-      if (showFavoritesModal && ALL_FORMULAS.filter(f => f.isFavorite).length === 0) {
-        setShowFavoritesModal(false);
+      // 从收藏中移除
+      const favorites: FavoriteItem[] = JSON.parse(localStorage.getItem('favorites') || '[]');
+      const index = favorites.findIndex((f: FavoriteItem) => f.id === id);
+      if (index !== -1) {
+        favorites.splice(index, 1);
+        localStorage.setItem('favorites', JSON.stringify(favorites));
       }
     }
   };
@@ -1640,7 +1655,7 @@ const HomePage = () => {
           console.log(`选择显示公式: ${selectedFormula.title}，准确率: ${selectedFormula.accuracy}`);
           
           setSelectedFormula(selectedFormula);
-          setShowLowAccuracyModal(true);
+          setShowLowAccuracyReminder(true);
           markModalAsShown();
         }
       }
@@ -1885,7 +1900,43 @@ const HomePage = () => {
         window.history.replaceState({}, document.title);
       }
     }
-  }, [location]);
+
+    // 检查是否需要立即显示收藏弹窗
+    if (location.state && (location.state as any).showFavoritesModal) {
+      console.log("检测到showFavoritesModal状态，立即显示收藏弹窗");
+      setShowFavoritesModal(true);
+      // 清除状态，防止刷新页面时重复处理
+      window.history.replaceState({}, document.title, location.pathname);
+    }
+    // 检查是否从收藏页面直接跳转回来
+    else if (location.pathname === '/favorites') {
+      console.log("检测到/favorites路径，直接打开收藏弹窗");
+      setShowFavoritesModal(true);
+      // 使用replaceState修改URL以避免刷新时重复打开
+      window.history.replaceState({}, document.title, '/');
+    }
+    // 检查sessionStorage中的标记
+    else if (sessionStorage.getItem('openFavoritesModalDirectly') === 'true') {
+      console.log("检测到sessionStorage标记，打开收藏弹窗");
+      setShowFavoritesModal(true);
+      // 清除标记，防止刷新页面时重复处理
+      sessionStorage.removeItem('openFavoritesModalDirectly');
+    }
+  }, [location.pathname, location.state]);
+
+  // 检查需要显示掌握度低的提醒
+  useEffect(() => {
+    // 遍历最近练习的公式，寻找正确率低的
+    const lowAccuracyFormulas = findLowAccuracyFormulas();
+    
+    if (lowAccuracyFormulas.length > 0 && shouldShowModal()) {
+      // 选择排在最前面的公式（最近练习且正确率低的）
+      setSelectedFormula(lowAccuracyFormulas[0]);
+      setShowLowAccuracyReminder(true);
+      // 记录已显示弹窗
+      markModalAsShown();
+    }
+  }, []);
 
   return (
     <HomeContainer>
@@ -2048,7 +2099,7 @@ const HomePage = () => {
             })()
           ) : (
             (() => {
-              const filteredList = formulas.filter(formula => {
+              const filteredList = filteredFormulas.filter(formula => {
                 if (practiceFilter === 'all') return true;
                 if (practiceFilter === 'practiced') return formula.accuracy > 0;
                 if (practiceFilter === 'unpracticed') return formula.accuracy <= 0;
@@ -2092,24 +2143,23 @@ const HomePage = () => {
       
       {/* 公式掌握度低提示弹窗 */}
       <AlertModal 
-        isOpen={showLowAccuracyModal}
-        onClose={() => setShowLowAccuracyModal(false)}
+        isOpen={showLowAccuracyReminder}
+        onClose={() => setShowLowAccuracyReminder(false)}
         title="巩固建议"
         content={selectedFormula ? `您对"${selectedFormula.title}"的掌握度较低(${selectedFormula.accuracy}%)，通过短时间练习可以快速提高掌握程度哦！` : ''}
         primaryAction={{
           text: "立即练习",
           onClick: () => {
-            setShowLowAccuracyModal(false);
+            setShowLowAccuracyReminder(false);
             if (selectedFormula) {
               // 导航到练习页面，添加来源参数
-              console.log(`从巩固建议弹窗点击练习公式: ${selectedFormula.title}`);
               navigate(`/practice/${selectedFormula.id}?from=home`);
             }
           }
         }}
         secondaryAction={{
           text: "稍后再说",
-          onClick: () => setShowLowAccuracyModal(false)
+          onClick: () => setShowLowAccuracyReminder(false)
         }}
         icon={{
           name: "fas fa-graduation-cap",

@@ -358,10 +358,26 @@ const PracticeResultPage = () => {
       console.log("从公式详情页来，返回到公式详情页");
       navigate(`/formula/${id}?from=${fromPage}`);
     } else if (fromPage === 'favorites') {
-      // 如果是从收藏弹窗来的，返回首页并设置标记打开收藏弹窗
-      console.log("从收藏弹窗来，返回首页并设置标记");
-      sessionStorage.setItem('openFavoritesModalDirectly', 'true');
-      navigate('/');
+      // 如果是从收藏弹窗来的，返回首页并立即显示收藏弹窗
+      console.log("从收藏弹窗来，返回首页并立即显示收藏弹窗");
+      navigate('/', {
+        state: {
+          showFavoritesModal: true
+        }
+      });
+    } else if (fromPage === 'record-modal') {
+      // 如果是从记录页弹窗来的，返回记录页并保留弹窗状态
+      console.log("从记录页弹窗来，返回记录页并重新打开弹窗");
+      // 获取之前传入的formulaId和formulaTitle
+      const formulaId = location.state?.formulaId;
+      const formulaTitle = location.state?.formulaTitle;
+      navigate('/record', {
+        state: {
+          fromPage: 'record-modal',
+          formulaId,
+          formulaTitle
+        }
+      });
     } else if (fromPage === 'record') {
       // 如果是从记录页面来的，返回记录页面
       console.log("从记录页面来，返回到记录页面");

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 
 const Container = styled.div`
@@ -202,13 +202,6 @@ const StatIconBox = styled.div<{color: string}>`
 const StatText = styled.div`
   display: flex;
   flex-direction: column;
-`;
-
-// 统计数值
-const StatValue = styled.div`
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
 `;
 
 // 统计标签
@@ -538,125 +531,6 @@ const EmptyState = styled.div`
   }
 `;
 
-// 模态框背景
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(2px);
-`;
-
-// 模态框内容
-const ModalContent = styled.div`
-  background-color: white;
-  border-radius: 12px;
-  padding: 20px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-`;
-
-// 模态框头部
-const ModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
-`;
-
-// 模态框标题
-const ModalTitle = styled.h3`
-  font-size: 16px;
-  margin: 0;
-  color: #333;
-  font-weight: 600;
-`;
-
-// 关闭按钮
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  cursor: pointer;
-  color: #999;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    background-color: #f5f5f5;
-    color: #333;
-  }
-`;
-
-// 详情列表
-const DetailsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-// 详情项
-const DetailItem = styled.div`
-  padding: 12px;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #f0f5ff;
-  }
-`;
-
-// 详情信息
-const DetailInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-// 详情日期
-const DetailDate = styled.div`
-  font-size: 13px;
-  color: #777;
-`;
-
-// 详情正确率
-const DetailAccuracy = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  font-size: 14px;
-`;
-
-// 箭头图标
-const ArrowIcon = styled.div`
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #4a89dc;
-`;
-
 // 更新学段筛选组件样式，使其与首页学习状态筛选一致
 const FilterContainer = styled.div`
   display: flex;
@@ -845,6 +719,185 @@ const SAMPLE_RECORDS: PracticeRecord[] = [
     timeSpent: '20分钟',
     subject: 'chemistry',
     educationLevel: 'high'
+  },
+  // 为二次方程添加更多练习记录
+  {
+    id: '5',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-03-05',
+    questionsCount: 12,
+    accuracy: 0.65,  // 65%正确率
+    timeSpent: '18分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '6',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-03-01',
+    questionsCount: 8,
+    accuracy: 0.5,  // 50%正确率
+    timeSpent: '13分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '7',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-02-25',
+    questionsCount: 15,
+    accuracy: 0.45,  // 45%正确率
+    timeSpent: '22分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '8',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-02-18',
+    questionsCount: 10,
+    accuracy: 0.3,  // 30%正确率
+    timeSpent: '16分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '9',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-02-10',
+    questionsCount: 10,
+    accuracy: 0.6,  // 60%正确率
+    timeSpent: '14分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '10',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-02-05',
+    questionsCount: 12,
+    accuracy: 0.58,  // 58%正确率
+    timeSpent: '20分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '11',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-01-28',
+    questionsCount: 8,
+    accuracy: 0.5,  // 50%正确率
+    timeSpent: '11分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '12',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-01-20',
+    questionsCount: 15,
+    accuracy: 0.4,  // 40%正确率
+    timeSpent: '25分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '13',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-01-15',
+    questionsCount: 10,
+    accuracy: 0.35,  // 35%正确率
+    timeSpent: '18分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  {
+    id: '14',
+    formulaId: 'f1',
+    formulaTitle: '二次方程',
+    date: '2024-01-10',
+    questionsCount: 8,
+    accuracy: 0.25,  // 25%正确率
+    timeSpent: '14分钟',
+    subject: 'math',
+    educationLevel: 'middle'
+  },
+  // 添加一个趋势为负的数据组（最近的成绩比前一次差）
+  {
+    id: '15',
+    formulaId: 'f4',
+    formulaTitle: '三角函数',
+    date: '2024-03-16',
+    questionsCount: 12,
+    accuracy: 0.5,  // 50%正确率
+    timeSpent: '18分钟',
+    subject: 'math',
+    educationLevel: 'high'
+  },
+  {
+    id: '16',
+    formulaId: 'f4',
+    formulaTitle: '三角函数',
+    date: '2024-03-10',
+    questionsCount: 15,
+    accuracy: 0.7,  // 70%正确率
+    timeSpent: '22分钟',
+    subject: 'math',
+    educationLevel: 'high'
+  },
+  {
+    id: '17',
+    formulaId: 'f4',
+    formulaTitle: '三角函数',
+    date: '2024-03-05',
+    questionsCount: 10,
+    accuracy: 0.6,  // 60%正确率
+    timeSpent: '15分钟',
+    subject: 'math',
+    educationLevel: 'high'
+  },
+  // 添加一个趋势为0的数据组（最近两次成绩相同）
+  {
+    id: '18',
+    formulaId: 'f5',
+    formulaTitle: '牛顿第三定律',
+    date: '2024-03-17',
+    questionsCount: 10,
+    accuracy: 0.8,  // 80%正确率
+    timeSpent: '14分钟',
+    subject: 'physics',
+    educationLevel: 'high'
+  },
+  {
+    id: '19',
+    formulaId: 'f5',
+    formulaTitle: '牛顿第三定律',
+    date: '2024-03-12',
+    questionsCount: 10,
+    accuracy: 0.8,  // 80%正确率，与上一次相同
+    timeSpent: '15分钟',
+    subject: 'physics',
+    educationLevel: 'high'
+  },
+  {
+    id: '20',
+    formulaId: 'f5',
+    formulaTitle: '牛顿第三定律',
+    date: '2024-03-08',
+    questionsCount: 12,
+    accuracy: 0.6,  // 60%正确率
+    timeSpent: '18分钟',
+    subject: 'physics',
+    educationLevel: 'high'
   }
 ];
 
@@ -976,7 +1029,8 @@ const FORMULA_CONTENTS: {[key: string]: string} = {
   'f1': 'π = 3.14159',
   'f2': 'S = πr²',
   'f3': 'V = πr²h',
-  'f4': 'a² + b² = c²',
+  'f4': 'sin²α + cos²α = 1',
+  'f5': 'F₁₂ = -F₂₁',
   'p1': 'F = ma',
   'p2': 'E_k = \\frac{1}{2}mv²',
   'c1': 'm(反应物) = m(生成物)'
@@ -1110,9 +1164,145 @@ const getAvailableSubjects = (educationLevel: EducationLevel): SubjectTab[] => {
   }
 };
 
+// 详情列表
+const DetailsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+// 详情项
+const DetailItem = styled.div`
+  padding: 16px;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  
+  &:hover {
+    background-color: #f0f5ff;
+    border-color: #d6e4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  }
+`;
+
+// 详情信息
+const DetailInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+// 详情日期
+const DetailDate = styled.div`
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+`;
+
+// 详情正确率
+const DetailAccuracy = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 14px;
+`;
+
+// 重新定义单独的ArrowIcon组件
+const ArrowIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a89dc;
+  background-color: #ecf5ff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  
+  ${DetailItem}:hover & {
+    transform: translateX(4px);
+  }
+`;
+
+// 模态框背景
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+`;
+
+// 模态框内容
+const ModalContent = styled.div`
+  background-color: white;
+  border-radius: 16px;
+  padding: 0 0 24px 0;
+  width: 60vw;
+  maxWidth: 60vw;
+  height: 60vh;
+  maxHeight: 60vh;
+  overflowY: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+`;
+
+// 模态框头部
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #4a89dc;
+  color: white;
+  position: relative;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  margin-bottom: 16px;
+`;
+
+// 模态框标题
+const ModalTitle = styled.h3`
+  font-size: 16px;
+  margin: 0;
+  font-weight: 500;
+  text-align: center;
+`;
+
+// 关闭按钮
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 // 记录详情页组件
 const RecordPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // 处理返回按钮点击
   const handleBack = () => {
@@ -1131,6 +1321,27 @@ const RecordPage = () => {
   // 模态框状态
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<AggregatedRecord | null>(null);
+  
+  // 检查是否从练习报告页返回，如果是则打开对应的弹窗
+  useEffect(() => {
+    // 从location.state中获取信息
+    const fromPage = location.state?.fromPage;
+    const formulaId = location.state?.formulaId;
+
+    // 如果是从练习报告页返回，并且有公式ID
+    if (fromPage === 'record-modal' && formulaId) {
+      // 查找对应的记录
+      const record = aggregatedRecords.find(r => r.formulaId === formulaId);
+      if (record) {
+        // 设置选中的记录并显示弹窗
+        setSelectedRecord(record);
+        setShowDetailModal(true);
+        
+        // 清除location.state，防止重复触发
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [location.state, aggregatedRecords, navigate, location.pathname]);
   
   // 过滤记录
   const filteredRecords = useMemo(() => {
@@ -1282,9 +1493,14 @@ const RecordPage = () => {
   // 处理详情记录点击，跳转到练习报告页面
   const handleDetailClick = (id: string) => {
     navigate(`/practice-result/${id}`, {
-      state: { fromPage: 'record' }
+      state: { 
+        fromPage: 'record-modal',
+        formulaId: selectedRecord?.formulaId,
+        formulaTitle: selectedRecord?.formulaTitle
+      }
     });
-    setShowDetailModal(false);
+    // 不关闭弹窗，这样返回时可以恢复弹窗状态
+    // setShowDetailModal(false);
   };
   
   return (
@@ -1301,31 +1517,31 @@ const RecordPage = () => {
         <StatsBar>
           <StatItem>
             <StatIconBox color="#4a89dc">
-              <i className="fas fa-calendar-check"></i>
+              <i className="fas fa-book"></i>
             </StatIconBox>
             <StatText>
-              <StatValue>{totalPractices}</StatValue>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#333' }}>{totalPractices}</div>
               <StatLabel>总练习次数</StatLabel>
             </StatText>
           </StatItem>
           
           <StatItem>
-            <StatIconBox color="#5856d6">
-              <i className="fas fa-book-open"></i>
+            <StatIconBox color="#52c41a">
+              <i className="fas fa-calculator"></i>
             </StatIconBox>
             <StatText>
-              <StatValue>{totalFormulas}</StatValue>
-              <StatLabel>练习公式数</StatLabel>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#333' }}>{totalFormulas}</div>
+              <StatLabel>总公式数</StatLabel>
             </StatText>
           </StatItem>
           
           <StatItem>
-            <StatIconBox color="#ff9500">
-              <i className="fas fa-chart-pie"></i>
+            <StatIconBox color="#fa8c16">
+              <i className="fas fa-chart-line"></i>
             </StatIconBox>
             <StatText>
-              <StatValue>{averageAccuracy}%</StatValue>
-              <StatLabel>总体正确率</StatLabel>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#333' }}>{averageAccuracy}%</div>
+              <StatLabel>平均正确率</StatLabel>
             </StatText>
           </StatItem>
         </StatsBar>
@@ -1424,38 +1640,359 @@ const RecordPage = () => {
       
       {/* 详情模态框 */}
       {showDetailModal && selectedRecord && (
-        <ModalOverlay onClick={() => setShowDetailModal(false)}>
-          <ModalContent onClick={e => e.stopPropagation()}>
-            <ModalHeader>
-              <ModalTitle>{selectedRecord?.formulaTitle} - 多次练习记录</ModalTitle>
-              <CloseButton onClick={() => setShowDetailModal(false)}>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(3px)'
+        }} onClick={() => setShowDetailModal(false)}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '0 0 24px 0',
+            width: '60vw',
+            maxWidth: '60vw',
+            height: '60vh',
+            maxHeight: '60vh',
+            overflowY: 'auto',
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)'
+          }} onClick={e => e.stopPropagation()}>
+            {/* 蓝色居中标题栏 */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '12px 16px',
+              backgroundColor: '#4a89dc',
+              color: 'white',
+              position: 'relative',
+              borderTopLeftRadius: '16px',
+              borderTopRightRadius: '16px',
+              marginBottom: '16px'
+            }}>
+              <h3 style={{
+                fontSize: '16px',
+                margin: 0,
+                fontWeight: 500,
+                textAlign: 'center'
+              }}>
+                {selectedRecord?.formulaTitle} - 练习记录
+              </h3>
+              <button style={{
+                background: 'none',
+                border: 'none',
+                width: '32px',
+                height: '32px',
+                fontSize: '16px',
+                cursor: 'pointer',
+                color: 'white',
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }} onClick={() => setShowDetailModal(false)}>
                 <i className="fas fa-times"></i>
-              </CloseButton>
-            </ModalHeader>
+              </button>
+            </div>
             
-            <DetailsList>
-              {selectedRecord?.records.map(record => (
-                <DetailItem 
+            {/* 数据统计卡片（一行显示） */}
+            <div style={{ 
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: '8px',
+              padding: '0 16px',
+              marginBottom: '16px'
+            }}>
+              {/* 最新正确率 */}
+              <div style={{ 
+                flex: '1',
+                background: 'linear-gradient(135deg, rgba(230, 247, 255, 0.5), rgba(240, 245, 255, 0.5))',
+                borderLeft: '3px solid #1890ff',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                  <i className="fas fa-check-circle" style={{ fontSize: '18px', color: '#1890ff', marginRight: '6px' }}></i>
+                  <div style={{ 
+                    fontSize: '18px', 
+                    fontWeight: 700, 
+                    color: Math.round(selectedRecord?.records[0].accuracy * 100) >= 80 
+                      ? '#52c41a' 
+                      : Math.round(selectedRecord?.records[0].accuracy * 100) >= 60 
+                        ? '#faad14' 
+                        : '#f5222d'
+                  }}>
+                    {Math.round(selectedRecord?.records[0].accuracy * 100)}%
+                  </div>
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: '#666' }}>
+                  最新正确率
+                </div>
+              </div>
+              
+              {/* 最高正确率 */}
+              <div style={{ 
+                flex: '1',
+                background: 'linear-gradient(135deg, rgba(246, 255, 237, 0.5), rgba(252, 255, 230, 0.5))',
+                borderLeft: '3px solid #52c41a',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                  <i className="fas fa-trophy" style={{ fontSize: '18px', color: '#52c41a', marginRight: '6px' }}></i>
+                  <div style={{ 
+                    fontSize: '18px', 
+                    fontWeight: 700, 
+                    color: Math.round(Math.max(...selectedRecord?.records.map(r => r.accuracy) || [0]) * 100) >= 80 
+                      ? '#52c41a' 
+                      : Math.round(Math.max(...selectedRecord?.records.map(r => r.accuracy) || [0]) * 100) >= 60 
+                        ? '#faad14' 
+                        : '#f5222d'
+                  }}>
+                    {Math.round(Math.max(...selectedRecord?.records.map(r => r.accuracy) || [0]) * 100)}%
+                  </div>
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: '#666' }}>
+                  最高正确率
+                </div>
+              </div>
+              
+              {/* 较上次趋势 */}
+              <div style={{ 
+                flex: '1',
+                background: 'linear-gradient(135deg, rgba(255, 242, 232, 0.5), rgba(255, 247, 230, 0.5))',
+                borderLeft: '3px solid #fa8c16',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                  <i className="fas fa-chart-line" style={{ fontSize: '18px', color: '#fa8c16', marginRight: '6px' }}></i>
+                  <div style={{ 
+                    fontSize: '18px', 
+                    fontWeight: 700, 
+                    color: selectedRecord?.records.length && selectedRecord.records.length > 1 
+                      ? (selectedRecord.records[0].accuracy - selectedRecord.records[1].accuracy) > 0 
+                        ? '#52c41a' 
+                        : (selectedRecord.records[0].accuracy - selectedRecord.records[1].accuracy) < 0 
+                          ? '#f5222d' 
+                          : '#8c8c8c'  // 当趋势为0时显示灰色
+                      : '#8c8c8c'  // 默认为灰色
+                  }}>
+                    {selectedRecord?.records.length && selectedRecord.records.length > 1 ? 
+                      (selectedRecord.records[0].accuracy - selectedRecord.records[1].accuracy) > 0 
+                      ? "+" + Math.round((selectedRecord.records[0].accuracy - selectedRecord.records[1].accuracy) * 100) + "%" 
+                      : (selectedRecord.records[0].accuracy - selectedRecord.records[1].accuracy) < 0
+                        ? Math.round((selectedRecord.records[0].accuracy - selectedRecord.records[1].accuracy) * 100) + "%"
+                        : "0%"
+                      : "0%"}
+                  </div>
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: '#666' }}>
+                  较上次趋势
+                </div>
+              </div>
+              
+              {/* 练习次数 */}
+              <div style={{ 
+                flex: '1',
+                background: 'linear-gradient(135deg, rgba(249, 240, 255, 0.5), rgba(239, 219, 255, 0.5))',
+                borderLeft: '3px solid #722ed1',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                  <i className="fas fa-redo-alt" style={{ fontSize: '18px', color: '#722ed1', marginRight: '6px' }}></i>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: '#333' }}>
+                    {selectedRecord?.records.length}
+                  </div>
+                </div>
+                <div style={{ fontSize: '12px', fontWeight: 500, color: '#666' }}>
+                  练习次数
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ 
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#333',
+              margin: '16px 0 12px',
+              display: 'flex',
+              alignItems: 'center',
+              paddingLeft: '16px',
+              gap: '8px'
+            }}>
+              <i className="fas fa-history" style={{ color: '#4a89dc', fontSize: '15px' }}></i>
+              练习记录
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '0 16px' }}>
+              {selectedRecord.records.map(record => (
+                <div 
                   key={record.id}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    backgroundColor: '#f8f9fa',
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    border: '1px solid transparent'
+                  }}
                   onClick={() => handleDetailClick(record.id)}
                 >
-                  <DetailInfo>
-                    <DetailDate>{formatDate(record.date)} · {record.timeSpent}</DetailDate>
-                    <DetailAccuracy>
-                      <AccuracyLabel value={Math.round(record.accuracy * 100)}>
+                  <div style={{ fontSize: '14px', color: '#666', fontWeight: 500, width: '90px' }}>
+                    {formatDate(record.date)}
+                  </div>
+                  
+                  <div style={{ 
+                    display: 'flex', 
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingLeft: '10px',
+                    paddingRight: '10px'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      width: '110px',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{ color: '#999', fontSize: '13px' }}>正确率</div>
+                      <div style={{ 
+                        marginLeft: '5px',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        color: Math.round(record.accuracy * 100) >= 80 
+                          ? '#52c41a' 
+                          : Math.round(record.accuracy * 100) >= 60 
+                            ? '#faad14' 
+                            : '#f5222d'
+                      }}>
                         {Math.round(record.accuracy * 100)}%
-                      </AccuracyLabel>
-                      {record.questionsCount}题
-                    </DetailAccuracy>
-                  </DetailInfo>
-                  <ArrowIcon>
-                    <i className="fas fa-chevron-right"></i>
-                  </ArrowIcon>
-                </DetailItem>
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                        width: '1px', 
+                        height: '14px', 
+                        backgroundColor: '#ddd'
+                    }}></div>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      width: '110px',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{ color: '#999', fontSize: '13px' }}>总题数</div>
+                      <div style={{ 
+                        marginLeft: '5px',
+                        color: '#333', 
+                        fontWeight: 600, 
+                        fontSize: '14px'
+                      }}>
+                        {record.questionsCount}题
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                        width: '1px', 
+                        height: '14px', 
+                        backgroundColor: '#ddd'
+                    }}></div>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      width: '95px',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{ color: '#999', fontSize: '13px' }}>正确</div>
+                      <div style={{ 
+                        marginLeft: '5px',
+                        color: '#52c41a', 
+                        fontWeight: 600, 
+                        fontSize: '14px'
+                      }}>
+                        {Math.round(record.accuracy * record.questionsCount)}题
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                        width: '1px', 
+                        height: '14px', 
+                        backgroundColor: '#ddd'
+                    }}></div>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      width: '90px',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{ color: '#999', fontSize: '13px' }}>用时</div>
+                      <div style={{ 
+                        marginLeft: '5px',
+                        color: '#333', 
+                        fontWeight: 600, 
+                        fontSize: '14px'
+                      }}>
+                        {record.timeSpent}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#4a89dc',
+                    backgroundColor: '#ecf5ff',
+                    borderRadius: '50%',
+                    marginLeft: '8px'
+                  }}>
+                    <i className="fas fa-chevron-right" style={{ fontSize: '12px' }}></i>
+                  </div>
+                </div>
               ))}
-            </DetailsList>
-          </ModalContent>
-        </ModalOverlay>
+            </div>
+          </div>
+        </div>
       )}
     </Container>
   );

@@ -87,11 +87,13 @@ const FormulaCard = styled.div`
 const CardHeader = styled.div`
   background-color: #4a89dc;
   color: white;
-  padding: 10px 30px;
+  padding: 16px 30px;
   position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 60px; /* 固定高度 */
+  box-sizing: border-box;
 `;
 
 const TitleSection = styled.div`
@@ -108,7 +110,7 @@ const TitleSection = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 25px;
+  font-size: 22px;  /* 修改字体大小 */
   font-weight: 600;
   margin: 0;
   text-align: center;
@@ -134,6 +136,7 @@ const NavButtonHeader = styled.button<{ direction: 'prev' | 'next' }>`
   border-radius: 8px;
   transition: all 0.2s;
   z-index: 2; /* 确保导航按钮位于标题之上 */
+  min-width: 80px; /* 添加最小宽度 */
   
   &:hover {
     opacity: 1;
@@ -153,6 +156,12 @@ const NavButtonHeader = styled.button<{ direction: 'prev' | 'next' }>`
     font-size: 22px;
     margin: ${props => props.direction === 'prev' ? '0 8px 0 0' : '0 0 0 8px'};
   }
+`;
+
+// 添加空白占位按钮样式
+const EmptyNavSpace = styled.div`
+  min-width: 80px; /* 与NavButtonHeader保持相同宽度 */
+  height: 100%;
 `;
 
 const ContentContainer = styled.div`
@@ -1660,10 +1669,11 @@ const FormulaDetailPage: React.FC = () => {
     // 等待动画完成后再导航
     setTimeout(() => {
       if (fromPage === 'favorites' || fromFavoritesModal) {
-        console.log("从收藏进入，返回首页并打开收藏弹窗");
-        // 设置标记，表示需要在首页打开收藏弹窗
-        sessionStorage.setItem('openFavoritesModalDirectly', 'true');
-        navigate('/', { replace: true });
+        console.log("从收藏进入，返回首页并立即显示收藏弹窗");
+        navigate('/', { 
+          replace: true,
+          state: { showFavoritesModal: true }
+        });
       } else if (fromPage === 'errorbook') {
         console.log("从错题本进入，返回错题本页面");
         navigate('/error-book', { replace: true });
@@ -1721,7 +1731,7 @@ const FormulaDetailPage: React.FC = () => {
               <span>{prevFormula.title}</span>
             </NavButtonHeader>
           ) : (
-            <div></div> /* 占位元素，保持布局 */
+            <EmptyNavSpace /> /* 使用固定宽度的占位元素 */
           )}
 
           <TitleSection>
@@ -1738,7 +1748,7 @@ const FormulaDetailPage: React.FC = () => {
               <i className="fas fa-chevron-right"></i>
             </NavButtonHeader>
           ) : (
-            <div></div> /* 占位元素，保持布局 */
+            <EmptyNavSpace /> /* 使用固定宽度的占位元素 */
           )}
         </CardHeader>
 

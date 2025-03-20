@@ -266,10 +266,13 @@ const PracticePage = () => {
       console.log("返回公式详情页");
       navigate(`/formula/${id}`);
     } else if (fromPage === 'favorites') {
-      // 如果是从收藏弹窗来的，返回首页并设置标记打开收藏弹窗
-      console.log("返回收藏弹窗");
-      sessionStorage.setItem('openFavoritesModalDirectly', 'true');
-      navigate('/'); 
+      // 如果是从收藏弹窗来的，直接返回首页并立即显示收藏弹窗
+      console.log("返回首页并立即显示收藏弹窗");
+      navigate('/', { 
+        state: { 
+          showFavoritesModal: true 
+        } 
+      });
     } else {
       // 默认返回首页
       console.log("返回首页");

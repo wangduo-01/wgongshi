@@ -227,10 +227,10 @@ const FavoritesModal: React.FC<FavoritesModalProps> = ({
   
   // 点击公式时的处理函数
   const handleFormulaClick = (formula: Formula) => {
-    // 设置标记，表明是从收藏弹窗进入
+    // 设置标记，表示是从收藏弹窗进入公式详情页
     sessionStorage.setItem('fromFavoritesModal', 'true');
-    // 清除可能存在的fromFormulaDetail标记
-    sessionStorage.removeItem('fromFormulaDetail');
+    
+    // 调用父组件传递的回调函数
     onFormulaClick(formula);
   };
   
